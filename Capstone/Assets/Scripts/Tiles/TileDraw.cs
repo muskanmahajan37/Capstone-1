@@ -11,6 +11,10 @@ public class TileDraw : MonoBehaviour {
     public void drawGround(Tile t) {
         int posX = Mathf.RoundToInt(t.position.x);
         int posY = Mathf.RoundToInt(t.position.y);
+        if (groundTileBase == null)
+        {
+            throw new SystemException();
+        }
         groundTileMap.SetTile(new Vector3Int(posX, posY, 0), groundTileBase);
     }
     public void drawGround(IEnumerable<Tile> tiles) {
@@ -20,6 +24,7 @@ public class TileDraw : MonoBehaviour {
     }
     public void drawGround(Tile[,] tiles) {
         foreach(Tile t in tiles) {
+            Debug.Log("Nocab flag 1");
             drawGround(t);
         }
     }

@@ -42,6 +42,7 @@ public class MapController : MonoBehaviour {
         incomingTiles = tbw.incomingTiles;
 
         // We only need to draw the ground once
+        Debug.Log("Drawing tiles");
         this.tileDraw.drawGround(allTiles);
     }
 
