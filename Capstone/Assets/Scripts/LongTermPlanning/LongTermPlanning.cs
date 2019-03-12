@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using PriorityQueueDemo;
+using System;
 
 public class LongTermPlanning {
 
@@ -9,39 +10,72 @@ public class LongTermPlanning {
     private static readonly int MAX_DEPTH = 5000000; // 5M searches
 
 
-    private int compareGameState(GameState currentGS, GameState targetGS)
-    {
+    private int compareGameState(GameState currentGS, GameState targetGS) {
         // How many time cycles will it take if we do nothing? 
-        int goldDelta = Mathf.Max(0, targetGS.gold - currentGS.gold);
-        int goldWaitTime = goldDelta / currentGS.goldPerTick;
+        // NOTE: It's expected that currentGS and targetGS have the types of resources
+        //       (Or at the least, that targetGS is a subset of currentGS)
 
-        int GPTDelta = Mathf.Max(0, targetGS.goldPerTick - currentGS.goldPerTick);
+        int maxWaitTime = 0; 
+        int totalRPTDelta = 0;
 
-        return goldWaitTime + GPTDelta;
+        foreach (var kvp in targetGS.resources) {
+            Resource currentResource = currentGS.resources[kvp.Key];
+            Resource targetResource = kvp.Value;
 
+            // How long will it take to get to the target if we just wait? 
+            int resourceDelta = Mathf.Max(0, targetResource.getResourceCount - currentResource.getResourceCount);
+            int resourceWaitTime = resourceDelta / currentResource.resourcePerTick;
+
+            // How far are we from the target resource income rate? 
+            int RPTDelta = Mathf.Max(0, targetResource.resourcePerTick - currentResource.resourcePerTick);
+            
+            maxWaitTime = Mathf.Max(maxWaitTime, resourceWaitTime);
+            totalRPTDelta += RPTDelta;
+        }
+
+        return maxWaitTime + totalRPTDelta;
     }
 
-    private HashSet<GameStateTransition> getNeighbors(GameState gs) {
+    // TODO: put this somewhere else
+    public static uint sigfigify(int n, int sigFigs) { return sigfigify((uint)n, sigFigs); }
+    public static uint sigfigify(uint n, int sigFigs) {
+        // NOTE: When casting a negative int into a uint the far left "negative marker" will cout as a sig fig
+
+        int sizeOfN = 0;
+        uint nPrime = n;
+        while (nPrime > 0) {
+            nPrime /= 10;
+            sizeOfN++;
+        }
+
+        if (sigFigs >= sizeOfN) { return n; }
+
+        int digitsCut = sizeOfN - sigFigs;
+        uint trimmedN = n / (uint)Mathf.Pow(10, digitsCut); // Cut off the right most values
+        return trimmedN * (uint)Mathf.Pow(10, digitsCut); // Replace them all with 0s 
+    }
+
+    private HashSet<QGameState> getNeighbors(QGameState qEntry) {
         // For a given game state return all valid edges out of it
 
-        HashSet<GameStateTransition> result = new HashSet<GameStateTransition>();
-        result.Add(waitTransition(gs, WAIT_TIME));
+        HashSet<QGameState> result = new HashSet<QGameState>();
+        result.Add(waitTransition(qEntry, WAIT_TIME));
 
-        if (canBuildBank(gs)) {
-            // If this game state can build a bank then that's an option
-            result.Add(buildBank(gs));
-        }
+
+
         return result;
     }
-    
 
-    public Queue<Work> plan(GameState initialGS, GameState targetGS)
-    {
+    public Queue<Work> plan(GameState initialGS, GameState targetGS) {
         // TODO: This function is the exact same as the AStart.getPath() function
 
-        QEntry currentQE = BuildPlan(initialGS, targetGS);
-        Debug.Log("Final game state gold: " + currentQE.gameState.gold);
-        Debug.Log("Final game state gpt: " + currentQE.gameState.goldPerTick);
+        QGameState currentQE = BuildPlan(initialGS, targetGS);
+
+        foreach(var kvp in currentQE.gameState.resources) {
+            Debug.Log("Final game state " + kvp.Value.name + ": " + kvp.Value.getResourceCount);
+            Debug.Log("Final game state " + kvp.Value.name + " per tick: " + kvp.Value.resourcePerTick);
+        }
+
         Debug.Log("Total Time: " + currentQE.costToGetHere);
 
         // TODO: using double ended queues may be more efficent
@@ -59,14 +93,14 @@ public class LongTermPlanning {
     }
 
 
-    private QEntry BuildPlan(GameState initialGS, GameState targetGS) {
+    private QGameState BuildPlan(GameState initialGS, GameState targetGS) {
 
-        PriorityQueue<int, QEntry> priorityQueue = new PriorityQueue<int, QEntry>();
+        PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>();
 
-        Dictionary<GameState, int> bestCostToGetHere = new Dictionary<GameState, int>();
+        Dictionary<int, int> bestCostToGetHere = new Dictionary<int, int>();
 
 
-        QEntry startQE = new QEntry(initialGS, null, Work.EMPTY, 0);
+        QGameState startQE = new QGameState(initialGS, null, Work.EMPTY, 0);
         int heuristic = compareGameState(initialGS, targetGS);
         priorityQueue.Enqueue(heuristic, startQE);
 
@@ -76,7 +110,7 @@ public class LongTermPlanning {
 
             totalChecks++;
 
-            QEntry qe = priorityQueue.DequeueValue();
+            QGameState qe = priorityQueue.DequeueValue();
 
             if (this.compareGameState(qe.gameState, targetGS) <= 0)
             {
@@ -85,37 +119,39 @@ public class LongTermPlanning {
                 return qe;
             }
 
-            if (totalChecks > MAX_DEPTH) {
+            if (totalChecks > MAX_DEPTH)
+            {
                 return null;
             }
 
-            if (bestCostToGetHere.ContainsKey(qe.gameState) &&
-                bestCostToGetHere[qe.gameState] <= qe.costToGetHere) {
+            if (bestCostToGetHere.ContainsKey(qe.gameState.GetHashCode()) &&
+                bestCostToGetHere[qe.gameState.GetHashCode()] <= qe.costToGetHere) {
                 // If we've already explored this game state
                 // AND if some other path is to this game state is cheeper
                 continue;
             } else {
                 // Else, this Queue Entry represents a cheeper path to get to this node
-                bestCostToGetHere[qe.gameState] = qe.costToGetHere;
+                bestCostToGetHere[qe.gameState.GetHashCode()] = qe.costToGetHere;
             }
 
 
-            foreach(GameStateTransition gameStateTransition in getNeighbors(qe.gameState)) {
-                GameState neighborGameState = gameStateTransition.gameState;
-                int edgeCost = gameStateTransition.time;
+            foreach(QGameState neighbor in getNeighbors(qe)) {
+                // The neighbor already has an updated gamestate, a job and an updated cost
 
-                int totalCostToExplorNeighbor = qe.costToGetHere + edgeCost;
+                //GameState neighborGameState = gameStateTransition.gameState;
+                //int edgeCost = gameStateTransition.time;
 
-                if (bestCostToGetHere.ContainsKey(neighborGameState) &&
-                    bestCostToGetHere[neighborGameState] <= totalCostToExplorNeighbor) {
+                //int totalCostToExplorNeighbor = qe.costToGetHere + edgeCost;
+
+                if (bestCostToGetHere.ContainsKey(neighbor.gameState.GetHashCode()) &&
+                    bestCostToGetHere[neighbor.gameState.GetHashCode()] <= neighbor.costToGetHere) {
                     // If we already have a better way to get to the neighbor
                     continue;
                 }
 
-                QEntry neighborQE = new QEntry(neighborGameState, qe, gameStateTransition.job, totalCostToExplorNeighbor);
 
-                heuristic = compareGameState(neighborGameState, targetGS) + totalCostToExplorNeighbor;
-                priorityQueue.Enqueue(heuristic, neighborQE);
+                heuristic = compareGameState(neighbor.gameState, targetGS) + neighbor.costToGetHere;
+                priorityQueue.Enqueue(heuristic, neighbor);
 
             }
 
@@ -124,15 +160,15 @@ public class LongTermPlanning {
 
     }
 
-    private class QEntry {
-        public QEntry parent;
+    private class QGameState {
+        public QGameState parent;
         public Work transitionWork; // transitionWork represents the job done to move from parent to currentGS
                                     // NOTE: This will be EMPTY if parent is null (ie if this QE is the root qe)
 
         public GameState gameState;
         public int costToGetHere;
 
-        public QEntry(GameState gs, QEntry parent, Work transitionWork, int costToGetHere) {
+        public QGameState(GameState gs, QGameState parent, Work transitionWork, int costToGetHere) {
             this.gameState = gs;
             this.parent = parent;
             this.transitionWork = transitionWork;
@@ -140,117 +176,26 @@ public class LongTermPlanning {
         }
     }
 
-    private class GameStateTransition
-    {
-        /**
-         * To represent the transition into this.gamestate
-         * The only GameState refrence in this GameStateTransition object represents what is at the end of this "edge"
-         * This transition has no idea, nore does it care, about the GameState that it started from
-         * 
-         * The time field represents the cost to traverse the edge
-         */
-
-        public GameState gameState;
-        public Work job;
-        public int time;
-
-        public GameStateTransition(GameState endGS, Work job, int time) {
-            this.gameState = endGS;
-            this.job = job;
-            this.time = time;
-        }
-
-    }
-
 
     ////////////////////////////////////////////////
 
     // This function represents an edge
-    private static GameStateTransition waitTransition(GameState gs, int time) {
-        GameState endGS = waitGameState(gs, time);
-        return new GameStateTransition(endGS, Work.Wait, time);
+    private static QGameState waitTransition(QGameState qe, int time) {
+        GameState endGS = waitGameState(qe.gameState, time);
+        int timeCost = qe.costToGetHere + time;
+        return new QGameState(endGS, qe, Work.Wait, timeCost);
     }
 
     private static GameState waitGameState(GameState gs, int time) {
         GameState endGS = new GameState(gs);
-        endGS.gold += gs.goldPerTick * time;
-        endGS.stone += gs.stonePerTick * time;
+        endGS.timePasses(time);
         return endGS;
     }
 
     //////////////////////////////////////////////////
 
-    private static readonly int bankGoldCost = 10;
-    private static readonly int bankBuildTime = 1;
-    private static readonly int bankGPTChange = 10;
-    private static bool canBuildBank(GameState gs) {
-        return gs.gold >= bankGoldCost;
-    }
-
-    private static GameStateTransition buildBank(GameState gs) {
-        GameState endGS = waitGameState(gs, bankBuildTime);
-        endGS.gold -= bankGoldCost;
-        endGS.goldPerTick += bankGPTChange;
-
-        return new GameStateTransition(endGS, Work.BuildBank, bankBuildTime);
-    }
-
 }
 
 
-public enum Work {
-    Wait,
-    BuildBank,
-
-    EMPTY // To represent a "null" value of work which is different than Wait
-}
-
-
-public class GameState {
-    /**
-     * To represent the current resources and expected income of a game world
-     */
-
-    public int gold;
-    public int goldPerTick;
-
-    public int stone;
-    public int stonePerTick;
-
-
-    public GameState() { }
-
-    public GameState(GameState gs)
-    {
-        this.gold = gs.gold;
-        this.goldPerTick = gs.goldPerTick;
-
-        this.stone = gs.stone;
-        this.stonePerTick = gs.stonePerTick;
-    }
-
-    public override int GetHashCode() {
-        int hash = 17;
-        hash = hash * 23 + (this.gold);
-        hash = hash * 23 + (this.goldPerTick);
-        hash = hash * 23 + (this.stone);
-        hash = hash * 23 + (this.stonePerTick);
-        return hash;
-
-    }
-
-    public override bool Equals(object obj) {
-        // Two Game States are equal if all their fields are the same
-        // TODO: To simplify things, perhapse we should round the fields down to the nearest 10s place? Depending on scale? 
-        GameState otherGS = obj as GameState;
-        if (otherGS == null) { return false; }
-
-        return this.gold == otherGS.gold &&
-            this.goldPerTick == otherGS.goldPerTick &&
-            this.stone == otherGS.stone &&
-            this.stonePerTick == otherGS.stonePerTick;
-
-    }
-}
 
 

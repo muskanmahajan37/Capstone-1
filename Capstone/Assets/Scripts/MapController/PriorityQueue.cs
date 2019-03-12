@@ -5,6 +5,7 @@
  * www.avk.name
  * alexey[ at ]kurakin.me
  * 
+ * Origional code can be found here: https://www.codeproject.com/Articles/126751/Priority-queue-in-C-with-the-help-of-heap-data-str
  * License can be found here: https://www.codeproject.com/info/cpol10.aspx
  * Repeted here for quick understanding:
  *     This License governs Your use of the Work. This License is intended to allow developers to use the Source Code 

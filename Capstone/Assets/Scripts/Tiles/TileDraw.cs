@@ -24,7 +24,6 @@ public class TileDraw : MonoBehaviour {
     }
     public void drawGround(Tile[,] tiles) {
         foreach(Tile t in tiles) {
-            Debug.Log("Nocab flag 1");
             drawGround(t);
         }
     }
