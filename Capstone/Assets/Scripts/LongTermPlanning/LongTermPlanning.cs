@@ -7,7 +7,7 @@ using System;
 public static class LongTermPlanning {
 
     private static readonly int WAIT_TIME = 10;
-    private static readonly int MAX_DEPTH = 5000000; // 5M searches
+    private static readonly int MAX_DEPTH = 500000; // 500K searches
 
 
     public static int compareGameState(GameState currentGS, GameState targetGS) {
@@ -77,9 +77,20 @@ public static class LongTermPlanning {
     }
 
     public static Queue<Work> plan(GameState initialGS, GameState targetGS) {
-        // TODO: This function is the exact same as the AStart.getPath() function
 
+        float startTime = Time.realtimeSinceStartup;
         QGameState currentQE = BuildPlan(initialGS, targetGS);
+
+        float endTime = Time.realtimeSinceStartup;
+        Debug.Log(startTime);
+        Debug.Log(endTime);
+        Debug.Log("delta Time: "); Debug.Log((endTime - startTime));
+
+        if (currentQE == null)
+        {
+            Debug.Log("No path found");
+            return new Queue<Work>();
+        }
 
         foreach (var kvp in currentQE.gameState.resources) {
             Debug.Log("Final game state " + kvp.Value.name + ": " + kvp.Value.resourceCount);
@@ -105,7 +116,9 @@ public static class LongTermPlanning {
 
     private static QGameState BuildPlan(GameState initialGS, GameState targetGS) {
 
-        PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>();
+        //AccordionPriorityQueue<int, QGameState> priorityQueue = new AccordionPriorityQueue<int, QGameState>(400);
+        MemoryBoundedPriorityQueue<int, QGameState> priorityQueue = new MemoryBoundedPriorityQueue<int, QGameState>(200);
+        //PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>(200);
 
         Dictionary<GameState, int> bestCostToGetHere = new Dictionary<GameState, int>();
 
@@ -154,16 +167,8 @@ public static class LongTermPlanning {
                 if (bestCostToGetHere.ContainsKey(neighbor.gameState) &&
                     bestCostToGetHere[neighbor.gameState] <= neighbor.costToGetHere) {
                     // If we already have a better way to get to the neighbor
-                    //Debug.Log("Ignoring edge");
-                    //Debug.Log("          gold resource count: " + neighbor.gameState.resources["gold"].resourceCount);
-                    //Debug.Log("          gold worker count: " + neighbor.gameState.resources["gold"].workerCount);
-                    //Debug.Log("          first check: " + bestCostToGetHere.ContainsKey(neighbor.gameState));
-                    //Debug.Log("          second check: " + bestCostToGetHere[neighbor.gameState] + " vs " + neighbor.costToGetHere);
                     continue;
                 }
-
-                Debug.Log("Adding neighbor to queue with stone count of: " + neighbor.gameState.resources["stone"].resourceCount);
-                Debug.Log("Adding neighbor to queue with stone prod of: " + neighbor.gameState.resources["stone"].resourcePerTick);
 
                 heuristic = compareGameState(neighbor.gameState, targetGS) + neighbor.costToGetHere;
                 priorityQueue.Enqueue(heuristic, neighbor);
@@ -212,7 +217,7 @@ public static class LongTermPlanning {
 
     //////////////////////////////////////////////////
 
-    private static readonly int workerBuildTime = 1;
+    private static readonly int workerBuildTime = 20;
     private static readonly int workerCostGold = 10;
     private static readonly int workerCostStone = 10;
     private static readonly int workerCostWood = 10;

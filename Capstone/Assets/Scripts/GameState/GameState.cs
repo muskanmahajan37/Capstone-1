@@ -33,7 +33,6 @@ public class GameState
         }
     }
 
-
     public void timePasses(int time) {
         // Update all the internal resources to increase their value by 
         // their respectice resource rates

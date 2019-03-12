@@ -106,7 +106,7 @@ public class RoundedResource : Resource {
         // The hash does NOT care about worker count
         int hash = 17;
         hash = (hash * 23) + MathHelp.sigfigify(this.resourceCount, percision);
-        hash = (hash * 23) + this.resourcePerTick; // Don't round the resouce production.
+        hash = (hash * 23) + MathHelp.sigfigify(this.resourcePerTick, percision + 2); // per tick needs higher percision
         return hash;
     }
 
