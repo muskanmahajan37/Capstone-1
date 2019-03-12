@@ -6,7 +6,7 @@ using UnityEngine;
 public enum Work
 {
     Wait,
-    BuildBank,
+    NewGoldMiner,
 
     EMPTY // To represent a "null" value of work which is different than Wait
 }

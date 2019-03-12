@@ -10,7 +10,7 @@ public class LongTermPlanning {
     private static readonly int MAX_DEPTH = 5000000; // 5M searches
 
 
-    private int compareGameState(GameState currentGS, GameState targetGS) {
+    public static int compareGameState(GameState currentGS, GameState targetGS) {
         // How many time cycles will it take if we do nothing? 
         // NOTE: It's expected that currentGS and targetGS have the types of resources
         //       (Or at the least, that targetGS is a subset of currentGS)
@@ -18,17 +18,19 @@ public class LongTermPlanning {
         int maxWaitTime = 0; 
         int totalRPTDelta = 0;
 
+        Debug.Log("target resources count: " + targetGS.resources.Count);
         foreach (var kvp in targetGS.resources) {
             Resource currentResource = currentGS.resources[kvp.Key];
             Resource targetResource = kvp.Value;
 
             // How long will it take to get to the target if we just wait? 
-            int resourceDelta = Mathf.Max(0, targetResource.getResourceCount - currentResource.getResourceCount);
+            int resourceDelta = Mathf.Max(0, targetResource.resourceCount - currentResource.resourceCount);
             int resourceWaitTime = resourceDelta / currentResource.resourcePerTick;
 
             // How far are we from the target resource income rate? 
             int RPTDelta = Mathf.Max(0, targetResource.resourcePerTick - currentResource.resourcePerTick);
-            
+
+            Debug.Log("resource wait time: " + resourceWaitTime);
             maxWaitTime = Mathf.Max(maxWaitTime, resourceWaitTime);
             totalRPTDelta += RPTDelta;
         }
@@ -61,8 +63,10 @@ public class LongTermPlanning {
         HashSet<QGameState> result = new HashSet<QGameState>();
         result.Add(waitTransition(qEntry, WAIT_TIME));
 
+        if (canBuildGoldMiner(qEntry))
+            { result.Add(buildGoldMiner(qEntry)); }
 
-
+        Debug.Log("Returning result count; " + result.Count);
         return result;
     }
 
@@ -71,8 +75,12 @@ public class LongTermPlanning {
 
         QGameState currentQE = BuildPlan(initialGS, targetGS);
 
-        foreach(var kvp in currentQE.gameState.resources) {
-            Debug.Log("Final game state " + kvp.Value.name + ": " + kvp.Value.getResourceCount);
+        if (currentQE.gameState == null) { Debug.Log("flag0"); }
+        if (currentQE.gameState == null) { Debug.Log("flag 1"); }
+        if (currentQE.gameState.resources == null) { Debug.Log("flag 2"); }
+
+        foreach (var kvp in currentQE.gameState.resources) {
+            Debug.Log("Final game state " + kvp.Value.name + ": " + kvp.Value.resourceCount);
             Debug.Log("Final game state " + kvp.Value.name + " per tick: " + kvp.Value.resourcePerTick);
         }
 
@@ -97,7 +105,7 @@ public class LongTermPlanning {
 
         PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>();
 
-        Dictionary<int, int> bestCostToGetHere = new Dictionary<int, int>();
+        Dictionary<GameState, int> bestCostToGetHere = new Dictionary<GameState, int>();
 
 
         QGameState startQE = new QGameState(initialGS, null, Work.EMPTY, 0);
@@ -112,40 +120,44 @@ public class LongTermPlanning {
 
             QGameState qe = priorityQueue.DequeueValue();
 
-            if (this.compareGameState(qe.gameState, targetGS) <= 0)
+            if (compareGameState(qe.gameState, targetGS) <= 0)
             {
                 // If we are 0 distance away from the target game state
                 // IE: If we have found the target game state
+                Debug.Log("Exit condition 1");
                 return qe;
             }
 
             if (totalChecks > MAX_DEPTH)
             {
+                Debug.Log("Exit condition 2");
                 return null;
             }
 
-            if (bestCostToGetHere.ContainsKey(qe.gameState.GetHashCode()) &&
-                bestCostToGetHere[qe.gameState.GetHashCode()] <= qe.costToGetHere) {
+            if (bestCostToGetHere.ContainsKey(qe.gameState) &&
+                bestCostToGetHere[qe.gameState] <= qe.costToGetHere) {
                 // If we've already explored this game state
                 // AND if some other path is to this game state is cheeper
                 continue;
             } else {
                 // Else, this Queue Entry represents a cheeper path to get to this node
-                bestCostToGetHere[qe.gameState.GetHashCode()] = qe.costToGetHere;
+                bestCostToGetHere[qe.gameState] = qe.costToGetHere;
             }
 
 
             foreach(QGameState neighbor in getNeighbors(qe)) {
                 // The neighbor already has an updated gamestate, a job and an updated cost
 
-                //GameState neighborGameState = gameStateTransition.gameState;
-                //int edgeCost = gameStateTransition.time;
 
-                //int totalCostToExplorNeighbor = qe.costToGetHere + edgeCost;
 
-                if (bestCostToGetHere.ContainsKey(neighbor.gameState.GetHashCode()) &&
-                    bestCostToGetHere[neighbor.gameState.GetHashCode()] <= neighbor.costToGetHere) {
+                if (bestCostToGetHere.ContainsKey(neighbor.gameState) &&
+                    bestCostToGetHere[neighbor.gameState] <= neighbor.costToGetHere) {
                     // If we already have a better way to get to the neighbor
+                    //Debug.Log("Ignoring edge");
+                    //Debug.Log("          gold resource count: " + neighbor.gameState.resources["gold"].resourceCount);
+                    //Debug.Log("          gold worker count: " + neighbor.gameState.resources["gold"].workerCount);
+                    //Debug.Log("          first check: " + bestCostToGetHere.ContainsKey(neighbor.gameState));
+                    //Debug.Log("          second check: " + bestCostToGetHere[neighbor.gameState] + " vs " + neighbor.costToGetHere);
                     continue;
                 }
 
@@ -156,11 +168,14 @@ public class LongTermPlanning {
             }
 
         } // End while queue is NOT empty
+        Debug.Log("Exit condition 3");
         return null;
 
     }
 
     private class QGameState {
+        // The thing that gets put onto the priority queue           
+
         public QGameState parent;
         public Work transitionWork; // transitionWork represents the job done to move from parent to currentGS
                                     // NOTE: This will be EMPTY if parent is null (ie if this QE is the root qe)
@@ -194,6 +209,24 @@ public class LongTermPlanning {
 
     //////////////////////////////////////////////////
 
+    private static readonly int workerBuildTime = 1;
+    private static readonly int workerCostGold = 10;
+    private static bool canBuildGoldMiner(QGameState qe) {
+        return qe.gameState.resources["gold"].resourceCount >= workerCostGold;
+    }
+
+    private static QGameState buildGoldMiner(QGameState qe) {
+        GameState oldGameState = qe.gameState;
+        GameState newGameState = waitGameState(oldGameState, workerBuildTime);
+
+        // Subtract the cost of building a worker
+        newGameState.resources["gold"].resourceCount -= workerCostGold;
+        newGameState.resources["gold"].workerCount++;
+
+        int timeCost = qe.costToGetHere + workerBuildTime;
+        return new QGameState(newGameState, qe, Work.NewGoldMiner, timeCost);
+
+    }
 }
 
 

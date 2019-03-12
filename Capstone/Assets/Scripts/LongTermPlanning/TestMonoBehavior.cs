@@ -12,27 +12,27 @@ public class TestMonoBehavior : MonoBehaviour
 
 
         GameState initialGS = new GameState();
-        Resource gold = new RoundedResource("gold", 5, 100, 2, 2);
+        Resource gold = new RoundedResource("gold", 5, 100, 2, 10);
         initialGS.addResource(gold);
 
 
         GameState targetGS = new GameState();
-        Resource targetGold = new RoundedResource("gold", 5, 5000000, 10, 2);
+        Resource targetGold = new RoundedResource("gold", 5, 5000000, 5, 10);
         targetGS.addResource(targetGold);
+
+        Debug.Log(LongTermPlanning.compareGameState(initialGS, targetGS));
+        Debug.Log(LongTermPlanning.compareGameState(targetGS, targetGS));
 
         int buildBank = 0;
         int waitCount = 0;
         foreach(Work w in ltp.plan(initialGS, targetGS))
         {
-            if (w == Work.EMPTY) {
-            } else if (w == Work.BuildBank)
-            {
-                buildBank++;
-            }
+            if (w == Work.EMPTY)
+                { }
+            else if (w == Work.NewGoldMiner)
+                { buildBank++; }
             else if (w == Work.Wait)
-            {
-                waitCount++;
-            }
+                { waitCount++; }
         }
         Debug.Log("Wait count:  " + waitCount + "  bank build:  " + buildBank);
 

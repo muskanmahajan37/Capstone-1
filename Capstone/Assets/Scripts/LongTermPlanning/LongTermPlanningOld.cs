@@ -193,7 +193,7 @@ public class LongTermPlanningOld {
         endGS.gold -= bankGoldCost;
         endGS.goldPerTick += bankGPTChange;
 
-        return new GameStateTransitionOld(endGS, Work.BuildBank, bankBuildTime);
+        return new GameStateTransitionOld(endGS, Work.NewGoldMiner, bankBuildTime);
     }
 
 }

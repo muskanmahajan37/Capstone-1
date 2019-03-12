@@ -10,20 +10,18 @@ public class Resource {
 
     public readonly string name; // The name/ what is this resource
 
-    protected int resourceCount;
-    public int getResourceCount { get { return resourceCount; } }
-
+    public int resourceCount; // How many resources are in the stockpile 
+    public int workerCount; // How many workers are working this resource? 
     protected readonly int perWorkerTick;  // This value represents how much resource is produced by one worker in one tick
-
-    protected int workerCount;
-    public int getWorkerCount { get { return workerCount; } }
+                                           // This value is usually NOT what you want, instead consider using the resourcePerTick value
 
     // TODO: Consider cashing this value? 
-    public int resourcePerTick { get { return this.perWorkerTick * getWorkerCount; } } // This value represents how much resources in produced by all the current workers in one tick
+    public int resourcePerTick { get { return this.perWorkerTick * workerCount; } } // This value represents how much resources in produced by all the current workers in one tick
 
 
     public Resource(Resource other) : this(other.name, other.perWorkerTick, other.resourceCount, other.workerCount) { }
 
+    // TODO: Make the name of the resource another Enumeration
     public Resource(string name, int perWorkerTick, int resourceCount = 0, int workerCount = 0) {
         this.name = name.ToLower();
         this.perWorkerTick = perWorkerTick;
@@ -68,7 +66,7 @@ public class Resource {
         // NOTE this doesn't care about number of workers
         Resource otherR = obj as Resource;
         if (otherR == null) { return false; }
-        return otherR.getResourceCount == this.getResourceCount &&
+        return otherR.resourceCount == this.resourceCount &&
             otherR.resourcePerTick == this.resourcePerTick;
     }
 }
@@ -116,7 +114,7 @@ public class RoundedResource : Resource {
         // NOTE this doesn't care about number of workers
         Resource otherR = obj as Resource;
         if (otherR == null) { return false; }
-        return otherR.getResourceCount == this.getResourceCount &&
+        return otherR.resourceCount == this.resourceCount &&
             otherR.resourcePerTick == this.resourcePerTick;
     }
 
