@@ -18,7 +18,6 @@ public class LongTermPlanning {
         int maxWaitTime = 0; 
         int totalRPTDelta = 0;
 
-        Debug.Log("target resources count: " + targetGS.resources.Count);
         foreach (var kvp in targetGS.resources) {
             Resource currentResource = currentGS.resources[kvp.Key];
             Resource targetResource = kvp.Value;
@@ -30,7 +29,6 @@ public class LongTermPlanning {
             // How far are we from the target resource income rate? 
             int RPTDelta = Mathf.Max(0, targetResource.resourcePerTick - currentResource.resourcePerTick);
 
-            Debug.Log("resource wait time: " + resourceWaitTime);
             maxWaitTime = Mathf.Max(maxWaitTime, resourceWaitTime);
             totalRPTDelta += RPTDelta;
         }
@@ -66,7 +64,7 @@ public class LongTermPlanning {
         if (canBuildGoldMiner(qEntry))
             { result.Add(buildGoldMiner(qEntry)); }
 
-        Debug.Log("Returning result count; " + result.Count);
+
         return result;
     }
 
@@ -74,10 +72,6 @@ public class LongTermPlanning {
         // TODO: This function is the exact same as the AStart.getPath() function
 
         QGameState currentQE = BuildPlan(initialGS, targetGS);
-
-        if (currentQE.gameState == null) { Debug.Log("flag0"); }
-        if (currentQE.gameState == null) { Debug.Log("flag 1"); }
-        if (currentQE.gameState.resources == null) { Debug.Log("flag 2"); }
 
         foreach (var kvp in currentQE.gameState.resources) {
             Debug.Log("Final game state " + kvp.Value.name + ": " + kvp.Value.resourceCount);
@@ -124,13 +118,11 @@ public class LongTermPlanning {
             {
                 // If we are 0 distance away from the target game state
                 // IE: If we have found the target game state
-                Debug.Log("Exit condition 1");
                 return qe;
             }
 
             if (totalChecks > MAX_DEPTH)
             {
-                Debug.Log("Exit condition 2");
                 return null;
             }
 
@@ -168,7 +160,6 @@ public class LongTermPlanning {
             }
 
         } // End while queue is NOT empty
-        Debug.Log("Exit condition 3");
         return null;
 
     }

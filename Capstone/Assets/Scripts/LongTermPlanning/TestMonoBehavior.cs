@@ -12,16 +12,13 @@ public class TestMonoBehavior : MonoBehaviour
 
 
         GameState initialGS = new GameState();
-        Resource gold = new RoundedResource("gold", 5, 100, 2, 10);
+        Resource gold = new RoundedResource("gold", 5, 100, 2, 2);
         initialGS.addResource(gold);
 
 
         GameState targetGS = new GameState();
-        Resource targetGold = new RoundedResource("gold", 5, 5000000, 5, 10);
+        Resource targetGold = new RoundedResource("gold", 5, 5000000, 5, 2);
         targetGS.addResource(targetGold);
-
-        Debug.Log(LongTermPlanning.compareGameState(initialGS, targetGS));
-        Debug.Log(LongTermPlanning.compareGameState(targetGS, targetGS));
 
         int buildBank = 0;
         int waitCount = 0;
