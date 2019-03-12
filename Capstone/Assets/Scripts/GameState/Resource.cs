@@ -36,7 +36,9 @@ public class Resource {
         // Removes workers from this resource
         // The result value is the number of workers now freed
         // If the result < requested then all the workers for this resource have been freed
-
+        if (requestedNumber <= 0) {
+            return 0;
+        }
         requestedNumber = Mathf.Min(requestedNumber, workerCount);
         this.workerCount -= requestedNumber;
         return requestedNumber;
