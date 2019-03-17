@@ -1,5 +1,5 @@
 ﻿using System;
-public class Contants
+public class Constants
 {
     public static readonly int WAIT_TIME = 10;
 }

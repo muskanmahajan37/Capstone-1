@@ -6,7 +6,7 @@ using System;
 
 public class LongTermPlanning {
 
-    private static readonly int WAIT_TIME = 10;
+    public static readonly int WAIT_TIME = 10;
     private static readonly int MAX_DEPTH = 5000000; // 5M searches
 
 
@@ -201,7 +201,7 @@ public class LongTermPlanning {
     //////////////////////////////////////////////////
 
     private static readonly int workerBuildTime = 1;
-    private static readonly int workerCostGold = 10;
+    private static readonly int workerCostGold = 100;
     private static bool canBuildGoldMiner(QGameState qe) {
         return qe.gameState.resources["gold"].resourceCount >= workerCostGold;
     }

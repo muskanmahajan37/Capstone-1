@@ -218,6 +218,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   startGameBtn: {fileID: 646897119}
+  increaseWorkerBtn: {fileID: 1524888560}
 --- !u!1 &646897117
 GameObject:
   m_ObjectHideFlags: 0
