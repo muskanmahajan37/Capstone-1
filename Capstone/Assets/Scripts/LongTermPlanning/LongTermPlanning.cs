@@ -6,8 +6,8 @@ using System;
 
 public static class LongTermPlanning {
 
-    private static readonly int WAIT_TIME = 10;
-    private static readonly int MAX_DEPTH = 500000; // 500K searches
+    public static readonly int WAIT_TIME = 10;
+    public static readonly int MAX_DEPTH = 500000; // 500K searches
 
 
     public static int compareGameState(GameState currentGS, GameState targetGS) {
@@ -217,23 +217,15 @@ public static class LongTermPlanning {
 
     //////////////////////////////////////////////////
 
-<<<<<<< HEAD
-    private static readonly int workerBuildTime = 1;
-    private static readonly int workerCostGold = 100;
-    private static bool canBuildGoldMiner(QGameState qe) {
-        return qe.gameState.resources["gold"].resourceCount >= workerCostGold;
-=======
-    private static readonly int workerBuildTime = 20;
-    private static readonly int workerCostGold = 10;
-    private static readonly int workerCostStone = 10;
-    private static readonly int workerCostWood = 10;
-
+    public static readonly int workerBuildTime = 20;
+    public static readonly int workerCostGold = 10;
+    public static readonly int workerCostStone = 10;
+    public static readonly int workerCostWood = 10;
 
     private static bool canBuildWorker(QGameState qe) {
         return qe.gameState.resources["gold"].resourceCount >= workerCostGold &&
             qe.gameState.resources["stone"].resourceCount >= workerCostStone &&
             qe.gameState.resources["wood"].resourceCount >= workerCostWood;
->>>>>>> c66d0b9a9bd4a56d62ac1a2efd55105e856601fa
     }
 
     private static QGameState buildGoldMiner(QGameState qe) {

@@ -6,68 +6,78 @@ using UnityEngine.UI;
 
 public class StartGameScript : MonoBehaviour
 {
-    private static readonly int workerCostGold = 100;
-    public static readonly int WAIT_TIME = 10;
+    private static readonly long fps = 60;
+    private readonly long ACTION_INTERVAL = fps * LongTermPlanning.WAIT_TIME;
+    private readonly long LOG_INTERVAL = fps * 5;
 
-    private long gameTime = 0;
-    private long fps = 60;
+    private static long gameTime = 0;
     private bool gameStarted = false;
 
-    public Button startGameBtn, increaseWorkerBtn;
+    public Button startGameBtn;
+    public Button addWorkerGold, addWorkerStone, addWorkerWood;
 
-    private List<RoundedResource> playerResources = new List<RoundedResource>();
-    private RoundedResource playerGold;
+    private readonly int noOfActors = 2;
 
-    private List<RoundedResource> resourcesAI = new List<RoundedResource>();
-    private RoundedResource goldAI;
+    private GameState[] gameStates;
+    private static int indexAI = 0;
+    private static int indexPlayer = 1;
+
+    private long[] workerBuildTimes;
+    private String[] workerBuildType;
+
     private Queue<Work> workQAI;
-    private int currentIndex;
-
-
 
 
     // Start is called before the first frame update
     void Start()
     {
         startGameBtn.onClick.AddListener(startGame);
-        increaseWorkerBtn.onClick.AddListener(addWorker);
-        playerResources.Add(new RoundedResource("gold", 5, 0, 5, 2));
-        playerGold = playerResources[0];
-        resourcesAI.Add(new RoundedResource("gold", 5, 0, 5, 2));
-        goldAI = resourcesAI[0];
-    }
-
-    private void addWorker()
-    {
-        if (playerGold.resourceCount > workerCostGold)
-        {
-            playerGold.addWorkers(1);
-            playerGold.resourceCount -= workerCostGold;
-            Debug.Log("Player's gold workers increased by 1 to: " + playerGold.workerCount);
-        }
-        else
-        {
-            Debug.Log("Not enough resources to increase worker count.");
-        }
+        addWorkerGold.onClick.AddListener(delegate { addWorker("gold"); });
+        addWorkerStone.onClick.AddListener(delegate { addWorker("stone"); });
+        addWorkerWood.onClick.AddListener(delegate { addWorker("wood"); });
     }
 
     private void startGame()
     {
         gameStarted = true;
-        LongTermPlanning ltp = new LongTermPlanning();
 
-
+        // TODO: Allow player to input initial game conditions
         GameState initialGS = new GameState();
-        //Resource goldAI = new RoundedResource("gold", 5, 100, 2, 2);
-        initialGS.addResource(new RoundedResource("gold", 5, 0, 5, 2));
+        Resource gold = new RoundedResource(name: "gold", perWorkerTick: 5, resourceCount: 100, workerCount: 0, percision: 2);
+        Resource stone = new RoundedResource("stone", 5, 100, 0, 2);
+        Resource wood = new RoundedResource("wood", 5, 100, 0, 2);
+        initialGS.addResource(gold);
+        initialGS.addResource(stone);
+        initialGS.addResource(wood);
 
 
         GameState targetGS = new GameState();
-        Resource targetGold = new RoundedResource("gold", 5, 5000000, 5, 2);
+        Resource targetGold = new RoundedResource("gold", 5, 60000, 5, 2);
+        Resource targetStone = new RoundedResource("stone", 5, 60000, 5, 2);
+        Resource targetWood = new RoundedResource("wood", 5, 60000, 5, 2);
         targetGS.addResource(targetGold);
+        targetGS.addResource(targetStone);
+        targetGS.addResource(targetWood);
 
-        workQAI = ltp.plan(initialGS, targetGS);
-        currentIndex = 0;
+        // TODO: Show loading game progress bar
+        workQAI = LongTermPlanning.plan(initialGS, targetGS);
+
+        // Setup actors for new game
+        gameStates = new GameState[noOfActors];
+        workerBuildType = new String[noOfActors];
+        workerBuildTimes = new long[noOfActors];
+
+        for (int i = 0; i < noOfActors; i++)
+        {
+            gameStates[i] = new GameState();
+        }
+
+        foreach (GameState gs in gameStates)
+        {
+            gs.addResource(new RoundedResource(name: "gold", perWorkerTick: 5, resourceCount: 100, workerCount: 0, percision: 2));
+            gs.addResource(new RoundedResource("stone", 5, 100, 0, 2));
+            gs.addResource(new RoundedResource("wood", 5, 100, 0, 2));
+        }
     }
 
     // Update is called once per frame
@@ -78,31 +88,93 @@ public class StartGameScript : MonoBehaviour
             gameTime++;
             if (gameTime % fps == 0)
             {
-                playerGold.update(1);
-                goldAI.update(1);
+                gameStates[indexPlayer].timePasses(1);
+                gameStates[indexAI].timePasses(1);
+                for (int i = 0; i < noOfActors; i++)
+                {
+                    if(workerBuildTimes[i] == gameTime)
+                    {
+                        buildWorker(gameStates[i], workerBuildType[i]);
+                    }
+                }
             }
-            if (gameTime % (fps * 5) == 0)
+            if (gameTime % LOG_INTERVAL == 0)
             {
-                Debug.Log("golds: " + playerGold.resourceCount + " , " + goldAI.resourceCount);
+
+                Debug.Log("Actor game states:");
+                foreach(GameState gs in gameStates) {
+                    Debug.Log(gs);
+                }
             }
-            if (gameTime % (fps * WAIT_TIME) == 0)
+            if (gameTime % ACTION_INTERVAL == 0)
             {
                 Work currentWork = workQAI.Dequeue();
                 if (currentWork == Work.EMPTY)
                 { }
                 else if (currentWork == Work.NewGoldMiner)
                 {
-                    if (playerGold.resourceCount > workerCostGold)
-                    {
-                        goldAI.addWorkers(1);
-                        goldAI.resourceCount -= workerCostGold;
-                        Debug.Log("AI's gold workers increased by 1 to: " + goldAI.workerCount);
+                    if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI])) {
+                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
+                        workerBuildType[indexAI] = "gold";
+                        Debug.Log("AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount);
                     }
-
                 }
+                else if (currentWork == Work.NewStoneMiner)
+                {
+                    if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI]))
+                    {
+                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
+                        workerBuildType[indexAI] = "stone";
+                        Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount);
+                    }
+                }
+                else if (currentWork == Work.NewWoodsman)
+                {
+                    if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI]))
+                    {
+                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
+                        workerBuildType[indexAI] = "wood";
+                        Debug.Log("AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount);
+                    }
+                }
+
                 else if (currentWork == Work.Wait)
                 { }
             }
         }
     }
+
+    private void addWorker(String resourceType)
+    {
+        if (canBuildWorker(gameStates[indexPlayer], workerBuildTimes[indexPlayer]))
+        {
+            workerBuildTimes[indexPlayer] = gameTime + LongTermPlanning.workerBuildTime;
+            workerBuildType[indexPlayer] = resourceType;
+            Debug.Log("Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType]);
+        }
+        else
+        {
+            Debug.Log("Not enough resources to increase worker count.");
+        }
+    }
+
+    public bool canBuildWorker(GameState gameState, long workerBuildTime)
+    {
+        return workerBuildTime < gameTime &&
+            gameState.resources["gold"].resourceCount >= LongTermPlanning.workerCostGold &&
+            gameState.resources["stone"].resourceCount >= LongTermPlanning.workerCostStone &&
+            gameState.resources["wood"].resourceCount >= LongTermPlanning.workerCostWood;
+    }
+
+    public void buildWorker(GameState gameState, String resourceType)
+    {
+        // Subtract the cost of building a worker
+        gameState.resources["gold"].resourceCount -= LongTermPlanning.workerCostGold;
+        gameState.resources["stone"].resourceCount -= LongTermPlanning.workerCostStone;
+        gameState.resources["wood"].resourceCount -= LongTermPlanning.workerCostWood;
+
+        gameState.resources[resourceType].addWorkers(1);
+    }
+
+
 }
