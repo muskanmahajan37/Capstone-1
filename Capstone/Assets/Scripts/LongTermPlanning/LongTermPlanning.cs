@@ -4,10 +4,10 @@ using UnityEngine;
 using PriorityQueueDemo;
 using System;
 
-public class LongTermPlanning {
+public static class LongTermPlanning {
 
     private static readonly int WAIT_TIME = 10;
-    private static readonly int MAX_DEPTH = 5000000; // 5M searches
+    private static readonly int MAX_DEPTH = 500000; // 500K searches
 
 
     public static int compareGameState(GameState currentGS, GameState targetGS) {
@@ -24,7 +24,10 @@ public class LongTermPlanning {
 
             // How long will it take to get to the target if we just wait? 
             int resourceDelta = Mathf.Max(0, targetResource.resourceCount - currentResource.resourceCount);
-            int resourceWaitTime = resourceDelta / currentResource.resourcePerTick;
+
+            int resourceWaitTime = (currentResource.resourcePerTick == 0) ?
+                                       WAIT_TIME * 1000 : // If we make this value int.maxValue then we have overflow problems
+                                       resourceDelta / currentResource.resourcePerTick;
 
             // How far are we from the target resource income rate? 
             int RPTDelta = Mathf.Max(0, targetResource.resourcePerTick - currentResource.resourcePerTick);
@@ -32,6 +35,7 @@ public class LongTermPlanning {
             maxWaitTime = Mathf.Max(maxWaitTime, resourceWaitTime);
             totalRPTDelta += RPTDelta;
         }
+
 
         return maxWaitTime + totalRPTDelta;
     }
@@ -55,23 +59,38 @@ public class LongTermPlanning {
         return trimmedN * (uint)Mathf.Pow(10, digitsCut); // Replace them all with 0s 
     }
 
-    private HashSet<QGameState> getNeighbors(QGameState qEntry) {
+    private static HashSet<QGameState> getNeighbors(QGameState qEntry) {
         // For a given game state return all valid edges out of it
 
         HashSet<QGameState> result = new HashSet<QGameState>();
         result.Add(waitTransition(qEntry, WAIT_TIME));
 
-        if (canBuildGoldMiner(qEntry))
-            { result.Add(buildGoldMiner(qEntry)); }
+        if (canBuildWorker(qEntry)) {
+            // If we have the resources to build a new worker
+            result.Add(buildGoldMiner(qEntry));
+            result.Add(buildWoodUnit(qEntry));
+            result.Add(buildStoneMiner(qEntry));
+        }
 
 
         return result;
     }
 
-    public Queue<Work> plan(GameState initialGS, GameState targetGS) {
-        // TODO: This function is the exact same as the AStart.getPath() function
+    public static Queue<Work> plan(GameState initialGS, GameState targetGS) {
 
+        float startTime = Time.realtimeSinceStartup;
         QGameState currentQE = BuildPlan(initialGS, targetGS);
+
+        float endTime = Time.realtimeSinceStartup;
+        Debug.Log(startTime);
+        Debug.Log(endTime);
+        Debug.Log("delta Time: "); Debug.Log((endTime - startTime));
+
+        if (currentQE == null)
+        {
+            Debug.Log("No path found");
+            return new Queue<Work>();
+        }
 
         foreach (var kvp in currentQE.gameState.resources) {
             Debug.Log("Final game state " + kvp.Value.name + ": " + kvp.Value.resourceCount);
@@ -95,9 +114,11 @@ public class LongTermPlanning {
     }
 
 
-    private QGameState BuildPlan(GameState initialGS, GameState targetGS) {
+    private static QGameState BuildPlan(GameState initialGS, GameState targetGS) {
 
-        PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>();
+        //AccordionPriorityQueue<int, QGameState> priorityQueue = new AccordionPriorityQueue<int, QGameState>(400);
+        MemoryBoundedPriorityQueue<int, QGameState> priorityQueue = new MemoryBoundedPriorityQueue<int, QGameState>(200);
+        //PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>(200);
 
         Dictionary<GameState, int> bestCostToGetHere = new Dictionary<GameState, int>();
 
@@ -123,6 +144,7 @@ public class LongTermPlanning {
 
             if (totalChecks > MAX_DEPTH)
             {
+                Debug.Log("exit case max depth");
                 return null;
             }
 
@@ -145,14 +167,8 @@ public class LongTermPlanning {
                 if (bestCostToGetHere.ContainsKey(neighbor.gameState) &&
                     bestCostToGetHere[neighbor.gameState] <= neighbor.costToGetHere) {
                     // If we already have a better way to get to the neighbor
-                    //Debug.Log("Ignoring edge");
-                    //Debug.Log("          gold resource count: " + neighbor.gameState.resources["gold"].resourceCount);
-                    //Debug.Log("          gold worker count: " + neighbor.gameState.resources["gold"].workerCount);
-                    //Debug.Log("          first check: " + bestCostToGetHere.ContainsKey(neighbor.gameState));
-                    //Debug.Log("          second check: " + bestCostToGetHere[neighbor.gameState] + " vs " + neighbor.costToGetHere);
                     continue;
                 }
-
 
                 heuristic = compareGameState(neighbor.gameState, targetGS) + neighbor.costToGetHere;
                 priorityQueue.Enqueue(heuristic, neighbor);
@@ -160,6 +176,7 @@ public class LongTermPlanning {
             }
 
         } // End while queue is NOT empty
+        Debug.Log("exit case no path");
         return null;
 
     }
@@ -200,10 +217,16 @@ public class LongTermPlanning {
 
     //////////////////////////////////////////////////
 
-    private static readonly int workerBuildTime = 1;
+    private static readonly int workerBuildTime = 20;
     private static readonly int workerCostGold = 10;
-    private static bool canBuildGoldMiner(QGameState qe) {
-        return qe.gameState.resources["gold"].resourceCount >= workerCostGold;
+    private static readonly int workerCostStone = 10;
+    private static readonly int workerCostWood = 10;
+
+
+    private static bool canBuildWorker(QGameState qe) {
+        return qe.gameState.resources["gold"].resourceCount >= workerCostGold &&
+            qe.gameState.resources["stone"].resourceCount >= workerCostStone &&
+            qe.gameState.resources["wood"].resourceCount >= workerCostWood;
     }
 
     private static QGameState buildGoldMiner(QGameState qe) {
@@ -212,10 +235,48 @@ public class LongTermPlanning {
 
         // Subtract the cost of building a worker
         newGameState.resources["gold"].resourceCount -= workerCostGold;
-        newGameState.resources["gold"].workerCount++;
+        newGameState.resources["stone"].resourceCount -= workerCostStone;
+        newGameState.resources["wood"].resourceCount -= workerCostWood;
+
+
+        newGameState.resources["gold"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
         return new QGameState(newGameState, qe, Work.NewGoldMiner, timeCost);
+
+    }
+
+    private static QGameState buildStoneMiner(QGameState qe)
+    {
+        GameState oldGameState = qe.gameState;
+        GameState newGameState = waitGameState(oldGameState, workerBuildTime);
+
+        // Subtract the cost of building a worker
+        newGameState.resources["gold"].resourceCount -= workerCostGold;
+        newGameState.resources["stone"].resourceCount -= workerCostStone;
+        newGameState.resources["wood"].resourceCount -= workerCostWood;
+
+        newGameState.resources["stone"].addWorkers(1);
+
+        int timeCost = qe.costToGetHere + workerBuildTime;
+        return new QGameState(newGameState, qe, Work.NewStoneMiner, timeCost);
+
+    }
+    
+    private static QGameState buildWoodUnit(QGameState qe)
+    {
+        GameState oldGameState = qe.gameState;
+        GameState newGameState = waitGameState(oldGameState, workerBuildTime);
+
+        // Subtract the cost of building a worker
+        newGameState.resources["gold"].resourceCount -= workerCostGold;
+        newGameState.resources["stone"].resourceCount -= workerCostStone;
+        newGameState.resources["wood"].resourceCount -= workerCostWood;
+
+        newGameState.resources["wood"].addWorkers(1);
+
+        int timeCost = qe.costToGetHere + workerBuildTime;
+        return new QGameState(newGameState, qe, Work.NewWoodsman, timeCost);
 
     }
 }

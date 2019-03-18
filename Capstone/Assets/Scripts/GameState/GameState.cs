@@ -7,6 +7,8 @@ public enum Work
 {
     Wait,
     NewGoldMiner,
+    NewStoneMiner,
+    NewWoodsman,
 
     EMPTY // To represent a "null" value of work which is different than Wait
 }
@@ -24,9 +26,12 @@ public class GameState
     public GameState() 
         { this.resources = new Dictionary<string, Resource>(); }
 
-    public GameState(GameState gs)
-        { this.resources = new Dictionary<string, Resource>(gs.resources); }
-
+    public GameState(GameState gs) {
+        this.resources = new Dictionary<string, Resource>(gs.resources.Count);
+        foreach(var kvp in gs.resources) {
+            this.resources[kvp.Key] = new Resource(kvp.Value);
+        }
+    }
 
     public void timePasses(int time) {
         // Update all the internal resources to increase their value by 

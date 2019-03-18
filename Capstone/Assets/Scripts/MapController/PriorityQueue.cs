@@ -24,6 +24,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace PriorityQueueDemo
 {
@@ -35,8 +36,8 @@ namespace PriorityQueueDemo
     /// <typeparam name="TValue">Type of values</typeparam>
     public class PriorityQueue<TPriority, TValue> : ICollection<KeyValuePair<TPriority, TValue>>
     {
-        private List<KeyValuePair<TPriority, TValue>> _baseHeap;
-        private IComparer<TPriority> _comparer;
+        protected List<KeyValuePair<TPriority, TValue>> _baseHeap;
+        protected IComparer<TPriority> _comparer;
 
         #region Constructors
 
@@ -427,5 +428,50 @@ namespace PriorityQueueDemo
         }
 
         #endregion
+
+        #region additions
+
+        public void removeBottomHalf() {
+            int halfIndex = _baseHeap.Count / 2;
+            this._baseHeap.RemoveRange(halfIndex, halfIndex);
+        }
+
+        public void removeLast() {
+            _baseHeap.RemoveAt(_baseHeap.Count - 1);
+        }
+
+        #endregion
     }
 }
+
+
+public class MemoryBoundedPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<TPriority, TValue> {
+
+    private int maxSize;
+
+    public MemoryBoundedPriorityQueue(int maxSize) : base (maxSize) { this.maxSize = maxSize; }
+
+
+    public new void Enqueue(TPriority priority, TValue value) {
+        base.Enqueue(priority, value);
+        if (_baseHeap.Count > maxSize) { base.removeLast(); }
+    }
+
+}
+
+public class AccordionPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<TPriority, TValue>
+{
+    private int maxSize;
+    public AccordionPriorityQueue(int maxSize) : base(Comparer<TPriority>.Default) { this.maxSize = maxSize; }
+
+    public new void Enqueue(TPriority priority, TValue value) {
+        base.Enqueue(priority, value);
+        if (_baseHeap.Count > maxSize) { base.removeBottomHalf(); }
+    }
+}
+
+
+
+
+
+
