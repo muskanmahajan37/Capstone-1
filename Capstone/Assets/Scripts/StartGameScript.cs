@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
@@ -27,6 +28,8 @@ public class StartGameScript : MonoBehaviour
 
     private Queue<Work> workQAI;
 
+    public Text mainTextDisplay;
+    public Text otherTextDisplay;
 
     // Start is called before the first frame update
     void Start()
@@ -98,11 +101,18 @@ public class StartGameScript : MonoBehaviour
             }
             if (gameTime % LOG_INTERVAL == 0)
             {
-
-                Debug.Log("Actor game states:");
+                StringBuilder sb = new StringBuilder();
+                sb.Append("Current in game time: ");
+                sb.Append(gameTime);
+                sb.Append('\n');
+                sb.Append("Actor game states: \n");
+                //Debug.Log("Actor game states:");
                 foreach(GameState gs in gameStates) {
-                    Debug.Log(gs);
+                    sb.Append(gs);
+                    sb.Append('\n');
+                    //Debug.Log(gs);
                 }
+                mainTextDisplay.text = sb.ToString();
             }
             if (gameTime % ACTION_INTERVAL == 0)
             {
@@ -114,7 +124,8 @@ public class StartGameScript : MonoBehaviour
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI])) {
                         workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
                         workerBuildType[indexAI] = "gold";
-                        Debug.Log("AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount);
+                        otherTextDisplay.text = "AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount;
+                        //Debug.Log("AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount);
                     }
                 }
                 else if (currentWork == Work.NewStoneMiner)
@@ -123,7 +134,8 @@ public class StartGameScript : MonoBehaviour
                     {
                         workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
                         workerBuildType[indexAI] = "stone";
-                        Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount);
+                        otherTextDisplay.text = "AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount;
+                        //Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount);
                     }
                 }
                 else if (currentWork == Work.NewWoodsman)
@@ -132,7 +144,8 @@ public class StartGameScript : MonoBehaviour
                     {
                         workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
                         workerBuildType[indexAI] = "wood";
-                        Debug.Log("AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount);
+                        otherTextDisplay.text = "AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount;
+                        //Debug.Log("AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount);
                     }
                 }
 
@@ -149,11 +162,13 @@ public class StartGameScript : MonoBehaviour
             // TODO: Disable all add worker buttons till worker built
             workerBuildTimes[indexPlayer] = gameTime + LongTermPlanning.workerBuildTime * fps;
             workerBuildType[indexPlayer] = resourceType;
-            Debug.Log("Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType]);
+            otherTextDisplay.text = "Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType];
+            //Debug.Log("Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType]);
         }
         else
         {
-            Debug.Log("Not enough resources to increase worker count.");
+            otherTextDisplay.text = "Not enough resources to increase worker count.";
+            //Debug.Log("Not enough resources to increase worker count.");
         }
     }
 
