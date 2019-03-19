@@ -39,6 +39,7 @@ public class StartGameScript : MonoBehaviour
 
     private void startGame()
     {
+        // TODO: Disable/remove start game button here
         gameStarted = true;
 
         // TODO: Allow player to input initial game conditions
@@ -69,14 +70,11 @@ public class StartGameScript : MonoBehaviour
 
         for (int i = 0; i < noOfActors; i++)
         {
-            gameStates[i] = new GameState();
-        }
-
-        foreach (GameState gs in gameStates)
-        {
+            GameState gs = new GameState();
             gs.addResource(new RoundedResource(name: "gold", perWorkerTick: 5, resourceCount: 100, workerCount: 0, percision: 2));
             gs.addResource(new RoundedResource("stone", 5, 100, 0, 2));
             gs.addResource(new RoundedResource("wood", 5, 100, 0, 2));
+            gameStates[i] = gs;
         }
     }
 
@@ -88,13 +86,13 @@ public class StartGameScript : MonoBehaviour
             gameTime++;
             if (gameTime % fps == 0)
             {
-                gameStates[indexPlayer].timePasses(1);
-                gameStates[indexAI].timePasses(1);
                 for (int i = 0; i < noOfActors; i++)
                 {
+                    GameState gameState = gameStates[i];
+                    gameState.timePasses(1);
                     if(workerBuildTimes[i] == gameTime)
                     {
-                        buildWorker(gameStates[i], workerBuildType[i]);
+                        buildWorker(gameState, workerBuildType[i]);
                     }
                 }
             }
@@ -148,7 +146,8 @@ public class StartGameScript : MonoBehaviour
     {
         if (canBuildWorker(gameStates[indexPlayer], workerBuildTimes[indexPlayer]))
         {
-            workerBuildTimes[indexPlayer] = gameTime + LongTermPlanning.workerBuildTime;
+            // TODO: Disable all add worker buttons till worker built
+            workerBuildTimes[indexPlayer] = gameTime + LongTermPlanning.workerBuildTime * fps;
             workerBuildType[indexPlayer] = resourceType;
             Debug.Log("Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType]);
         }
@@ -174,6 +173,7 @@ public class StartGameScript : MonoBehaviour
         gameState.resources["wood"].resourceCount -= LongTermPlanning.workerCostWood;
 
         gameState.resources[resourceType].addWorkers(1);
+        // TODO: Re-enable add worker buttons
     }
 
 
