@@ -15,7 +15,7 @@ public class StartGameScript : MonoBehaviour
     private bool gameStarted = false;
 
     public Button startGameBtn;
-    public Button addWorkerGold, addWorkerStone, addWorkerWood;
+    public Button addWorkerGoldBtn, addWorkerStoneBtn, addWorkerWoodBtn;
 
     private readonly int noOfActors = 2;
 
@@ -35,15 +35,15 @@ public class StartGameScript : MonoBehaviour
     void Start()
     {
         startGameBtn.onClick.AddListener(startGame);
-        addWorkerGold.onClick.AddListener(delegate { addWorker("gold"); });
-        addWorkerStone.onClick.AddListener(delegate { addWorker("stone"); });
-        addWorkerWood.onClick.AddListener(delegate { addWorker("wood"); });
+        addWorkerGoldBtn.onClick.AddListener(delegate { addWorker("gold"); });
+        addWorkerStoneBtn.onClick.AddListener(delegate { addWorker("stone"); });
+        addWorkerWoodBtn.onClick.AddListener(delegate { addWorker("wood"); });
     }
 
     private void startGame()
     {
-        // TODO: Disable/remove start game button here
         gameStarted = true;
+        startGameBtn.interactable = false;
 
         // TODO: Allow player to input initial game conditions
         GameState initialGS = new GameState();
@@ -87,15 +87,23 @@ public class StartGameScript : MonoBehaviour
         if (gameStarted)
         {
             gameTime++;
-            if (gameTime % fps == 0)
+
+            for (int i = 0; i < noOfActors; i++)
             {
-                for (int i = 0; i < noOfActors; i++)
+                GameState gameState = gameStates[i];
+                if (gameTime % fps == 0)
                 {
-                    GameState gameState = gameStates[i];
                     gameState.timePasses(1);
-                    if(workerBuildTimes[i] == gameTime)
+                }
+                if(workerBuildTimes[i] == gameTime)
+                {
+                    buildWorker(gameState, workerBuildType[i]);
+                    // If the worker has been built for the player, re-enable all add new worker buttons
+                    if (i == indexPlayer)
                     {
-                        buildWorker(gameState, workerBuildType[i]);
+                        addWorkerGoldBtn.interactable = true;
+                        addWorkerStoneBtn.interactable = true;
+                        addWorkerWoodBtn.interactable = true;
                     }
                 }
             }
@@ -108,11 +116,12 @@ public class StartGameScript : MonoBehaviour
                 sb.Append("Actor game states: \n");
                 //Debug.Log("Actor game states:");
                 foreach(GameState gs in gameStates) {
-                    sb.Append(gs);
+                    sb.Append(gs.ToString());
                     sb.Append('\n');
                     //Debug.Log(gs);
                 }
-                mainTextDisplay.text = sb.ToString();
+                Debug.Log(sb.ToString());
+                //mainTextDisplay.text = sb.ToString();
             }
             if (gameTime % ACTION_INTERVAL == 0)
             {
@@ -122,10 +131,10 @@ public class StartGameScript : MonoBehaviour
                 else if (currentWork == Work.NewGoldMiner)
                 {
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI])) {
-                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
+                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime * fps;
                         workerBuildType[indexAI] = "gold";
-                        otherTextDisplay.text = "AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount;
-                        //Debug.Log("AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount);
+                        //otherTextDisplay.text = "AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].resourceCount;
+                        Debug.Log("AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].workerCount);
                     }
                 }
                 else if (currentWork == Work.NewStoneMiner)
@@ -134,8 +143,8 @@ public class StartGameScript : MonoBehaviour
                     {
                         workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
                         workerBuildType[indexAI] = "stone";
-                        otherTextDisplay.text = "AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount;
-                        //Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount);
+                        //otherTextDisplay.text = "AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount;
+                        Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].workerCount);
                     }
                 }
                 else if (currentWork == Work.NewWoodsman)
@@ -144,8 +153,8 @@ public class StartGameScript : MonoBehaviour
                     {
                         workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
                         workerBuildType[indexAI] = "wood";
-                        otherTextDisplay.text = "AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount;
-                        //Debug.Log("AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount);
+                        //otherTextDisplay.text = "AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount;
+                        Debug.Log("AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].workerCount);
                     }
                 }
 
@@ -159,16 +168,19 @@ public class StartGameScript : MonoBehaviour
     {
         if (canBuildWorker(gameStates[indexPlayer], workerBuildTimes[indexPlayer]))
         {
-            // TODO: Disable all add worker buttons till worker built
             workerBuildTimes[indexPlayer] = gameTime + LongTermPlanning.workerBuildTime * fps;
             workerBuildType[indexPlayer] = resourceType;
-            otherTextDisplay.text = "Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType];
-            //Debug.Log("Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType]);
+            // Disable all add worker buttons for player till worker built
+            addWorkerGoldBtn.interactable = false;
+            addWorkerStoneBtn.interactable = false;
+            addWorkerWoodBtn.interactable = false;
+            //otherTextDisplay.text = "Player's " + resourceType + " workers will be increased by 1 to: " + gameStates[indexPlayer].resources[resourceType];
+            Debug.Log("Player's " + resourceType + " workers will be increased by 1. Current: " + gameStates[indexPlayer].resources[resourceType].workerCount);
         }
         else
         {
-            otherTextDisplay.text = "Not enough resources to increase worker count.";
-            //Debug.Log("Not enough resources to increase worker count.");
+            //otherTextDisplay.text = "Not enough resources to increase worker count.";
+            Debug.Log("Not enough resources to increase worker count.");
         }
     }
 
@@ -188,7 +200,7 @@ public class StartGameScript : MonoBehaviour
         gameState.resources["wood"].resourceCount -= LongTermPlanning.workerCostWood;
 
         gameState.resources[resourceType].addWorkers(1);
-        // TODO: Re-enable add worker buttons
+        Debug.Log("New " + resourceType + "worker built.");
     }
 
 
