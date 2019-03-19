@@ -145,6 +145,7 @@ MonoBehaviour:
   groundTileBase: {fileID: 11400000, guid: 55faa1da9ff58dd449fe7a493dafc349, type: 2}
   objectTileMap: {fileID: 1366112648}
   rockTileBase: {fileID: 11400000, guid: 8087fcbefdf7ac240965cec00549ebcd, type: 2}
+  peopleTileMap: {fileID: 787252909}
 --- !u!4 &51958951
 Transform:
   m_ObjectHideFlags: 0

@@ -3,11 +3,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using System;
-
+ 
 public class TileDraw : MonoBehaviour {
 
     public Tilemap groundTileMap;
     public TileBase groundTileBase;
+    
+    public Tilemap objectTileMap;
+    public TileBase rockTileBase;
+
+    public Tilemap peopleTileMap;  // Note, currently dwarfs draw themselves so this should not really be used much
+
+    #region specific drawing
+
+    #region ground
     public void drawGround(Tile t) {
         int posX = Mathf.RoundToInt(t.position.x);
         int posY = Mathf.RoundToInt(t.position.y);
@@ -27,11 +36,9 @@ public class TileDraw : MonoBehaviour {
             drawGround(t);
         }
     }
+    #endregion
 
-
-
-    public Tilemap objectTileMap;
-    public TileBase rockTileBase;
+    #region rocks
     public void drawNewRock(Tile tile) {
         int posX = Mathf.RoundToInt(tile.position.x);
         int posY = Mathf.RoundToInt(tile.position.y);
@@ -44,17 +51,34 @@ public class TileDraw : MonoBehaviour {
             drawNewRock(t);
         }
     }
+    #endregion
 
+    #endregion
 
-    public void drawOnTile(Tile tile, TileBase picture, Tilemap tilemap) {
-        int posX = Mathf.RoundToInt(tile.position.x);
-        int posY = Mathf.RoundToInt(tile.position.y);
+    #region general drawing
 
-        tilemap.SetTile(new Vector3Int(posX, posY, 0), picture);
-    }
-    public void drawOnTile(IEnumerable<Tile> tiles, TileBase picture, Tilemap tilemap) {
-        foreach (Tile t in tiles) {
-            drawOnTile(t, picture, tilemap);
+    private Tilemap getTileMap(GridLayers layer) {
+        switch(layer) {
+            case GridLayers.Ground: return this.groundTileMap;
+            case GridLayers.People: return this.peopleTileMap;
+            case GridLayers.Objects: return this.objectTileMap;
+            case GridLayers.NONE:
+            default: Debug.Log("Error: can't find a NONE gridLayer"); return null;
         }
     }
+
+    public void drawOnTile(TileBase picture, GridLayers layer, int x, int y, int z = 0) {
+        getTileMap(layer).SetTile(new Vector3Int(x, y, z), picture);
+    }
+
+    #endregion 
+
+}
+
+
+public enum GridLayers {
+    People,  // Note, currently dwarfs draw themselves so this should not really be used much
+    Ground,
+    Objects,
+    NONE
 }

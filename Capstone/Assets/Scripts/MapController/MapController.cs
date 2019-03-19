@@ -1,8 +1,6 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
-using PriorityQueueDemo;
+using UnityEngine.Tilemaps;
 
 public class MapController : MonoBehaviour {
     // This is the interface through which all map related updates happen
@@ -110,6 +108,14 @@ public class MapController : MonoBehaviour {
         // Cut off all edges pointing into targetTile
         cutAllIncomingEdges(targetTile);
     }
+
+
+    public void drawBlockingTile(TileBase newTile, int x, int y, int z = 0) {
+        // Draw the provided tile at the x, y position and make that tile unwalkable
+        addObstacle(x, y);
+        tileDraw.drawOnTile(newTile, GridLayers.Objects, x, y, z);
+    }
+
     #endregion
 
     #region Direct Edge Modifiers

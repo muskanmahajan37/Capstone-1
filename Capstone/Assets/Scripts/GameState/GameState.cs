@@ -14,8 +14,7 @@ public enum Work
 }
 
 
-public class GameState
-{
+public class GameState {
     /**
      * To represent the current resources and expected income of a game world
      */
