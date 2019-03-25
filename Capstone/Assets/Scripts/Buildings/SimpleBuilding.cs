@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 
 public interface IBuilding  {
@@ -44,7 +45,21 @@ public interface IBuilding  {
     // Clones this building, but the new building has the same population as this building
     IBuilding deepClone();
 
-    Sprite buildingIcon();
+
+
+    // Accessors
+    TileBase buildingIcon();
+    Vector2Int position();
+    BuildingType getBuildingType();
+    
+    int currentWorkers();
+    int openWorkerSlots();
+
+    // Modifiers
+    bool addWorker();
+    bool removeWorker();
+    
+    // TODO: Claimed spots vs actually filled spots
 }
 
 
@@ -56,36 +71,63 @@ public class SimpleBuilding : IBuilding {
      *  - no population cap
      * 
      */
-
+    private readonly BuildingType bt;
     private readonly HashSet<ResourceChange> buildCost;
 
     private readonly ResourceType outputResource;
     private int currentPop;
+    private int maxPop;
     private int productionPerPop;
 
-    private Sprite icon;
+    private TileBase icon;
+    private Vector2Int pos;
 
+    #region Constructors
 
-    public SimpleBuilding(ResourceType outputResource, int prodPerPop, Sprite icon, HashSet<ResourceChange> costToBuild) {
+    // TODO: Clean this up. Maybe have a building factory class? 
+    public SimpleBuilding(
+        BuildingType bt,
+        ResourceType outputResource, 
+        int prodPerPop, 
+        int maxPop,
+        TileBase icon, 
+        Vector2Int position,
+        HashSet<ResourceChange> costToBuild)
+    {
+        this.bt = bt;
         this.outputResource = outputResource;
         this.buildCost = costToBuild;
+
         this.productionPerPop = prodPerPop;
+        this.maxPop = maxPop;
 
         this.icon = icon;
+        this.pos = position;
     }
     
-
-    public IBuilding simpleClone() {
+    private SimpleBuilding clone() {        
         // TODO: Consider, is having every clone point to the same buildCost object ok? 
-        return new SimpleBuilding(this.outputResource, this.productionPerPop, this.icon, this.buildCost);
+        return new SimpleBuilding(
+            this.bt,
+            this.outputResource,
+            this.productionPerPop,
+            this.maxPop,
+            this.icon,
+            new Vector2Int(pos.x, pos.y),
+            this.buildCost);
     }
-
+    
+    public IBuilding simpleClone() {
+        return this.clone();
+    }
+    
     public IBuilding deepClone() {
-        SimpleBuilding result = new SimpleBuilding(this.outputResource, this.productionPerPop, this.icon, this.buildCost);
+        SimpleBuilding result = this.clone();
         result.currentPop = this.currentPop;
         return result;
     }
 
+    #endregion
 
     public HashSet<ResourceChange> costToBuild() {
         return this.buildCost;
@@ -96,6 +138,7 @@ public class SimpleBuilding : IBuilding {
         return new HashSet<ResourceType>();
     }
 
+    // TODO: Does this really need to be a clone? probably... 
     public HashSet<ResourceType> outputResources() {
         return new HashSet<ResourceType>() { outputResource };
     }
@@ -112,9 +155,26 @@ public class SimpleBuilding : IBuilding {
         return new HashSet<ResourceChange>() { new ResourceChange(this.outputResource, change) };
     }
 
+    #region Accessors
+    public TileBase buildingIcon() { return this.icon; }
+    public Vector2Int position() { return this.pos; }
+    public BuildingType getBuildingType() { return this.bt; }
+    public int currentWorkers() { return this.currentPop; }
+    public int openWorkerSlots() { return this.maxPop - this.currentPop; }
 
-    public Sprite buildingIcon() {
-        return this.icon;
+    #endregion
+
+    public bool addWorker() {
+        if (this.maxPop <= this.currentPop) { return false; }
+        this.currentPop++;
+        return true;
+    }
+
+    public bool removeWorker()
+    {
+        if (this.currentPop <= 0) { return false; }
+        this.currentPop--;
+        return true;
     }
 }
 

@@ -124,13 +124,3 @@ public class RoundedResource : Resource {
 
 
 
-public enum ResourceType
-{
-    Gold,
-    Stone,
-    Wood,
-    Food,
-    Iron,
-
-    NONE
-}

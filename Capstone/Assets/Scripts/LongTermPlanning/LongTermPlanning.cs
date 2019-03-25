@@ -242,7 +242,7 @@ public static class LongTermPlanning {
         newGameState.resources["gold"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.NewGoldMiner, timeCost);
+        return new QGameState(newGameState, qe, Work.BuyWorkerBank, timeCost);
 
     }
 
@@ -259,7 +259,7 @@ public static class LongTermPlanning {
         newGameState.resources["stone"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.NewStoneMiner, timeCost);
+        return new QGameState(newGameState, qe, Work.BuyWorkerStoneMason, timeCost);
 
     }
     
@@ -276,7 +276,7 @@ public static class LongTermPlanning {
         newGameState.resources["wood"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.NewWoodsman, timeCost);
+        return new QGameState(newGameState, qe, Work.BuyWorkerWoodCutter, timeCost);
 
     }
 }

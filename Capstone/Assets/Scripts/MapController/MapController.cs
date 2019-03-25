@@ -98,6 +98,7 @@ public class MapController : MonoBehaviour {
         drawNewRock(new Tile(new Vector2Int(5, 9)));
         drawNewRock(new Tile(new Vector2Int(4, 9)));
         drawNewRock(new Tile(new Vector2Int(3, 9)));
+
     }
 
     public void addObstacle(int x, int y) {
@@ -114,6 +115,13 @@ public class MapController : MonoBehaviour {
         // Draw the provided tile at the x, y position and make that tile unwalkable
         addObstacle(x, y);
         tileDraw.drawOnTile(newTile, GridLayers.Objects, x, y, z);
+    }
+
+    public void addBuilding(IBuilding newBuilding) {
+        // This simply draws the building onto the Building TileMap object
+        Vector2Int pos = newBuilding.position();
+        addObstacle(pos.x, pos.y);
+        tileDraw.drawBuilding(newBuilding);
     }
 
     #endregion
@@ -175,13 +183,11 @@ public class MapController : MonoBehaviour {
 
     #region Node Accessors (Tiles)
 
-    public Tile getTile(int x, int y) {
-        return allTiles[x, y];
-    }
+    public Tile getTile(int x, int y) { return allTiles[x, y]; }
+    public Tile getTile(Tile t)       { return getTile(t.x, t.y); }
 
-    public Tile getTile(Tile t) {
-        return getTile(t.position.x, t.position.y);
-    }
+    public bool isWalkable(int x, int y) { return getTile(x, y).isWalkable; }
+    public bool isWalkable(Tile t)       { return isWalkable(t.x, t.y); }
 
     #endregion
 

@@ -16,6 +16,7 @@ class AStar {
     private int totalChecks = 0; // How many nodes have we explored? Used for early termination checks
 
     public AStar(Tile start, Tile end) {
+        // NOTE: This function goes to the map controller and pulls the actual tiles/ edges
         MapController mc = MapController.singleton;
         this.startTile = mc.getTile(start);
         this.endTile = mc.getTile(end);

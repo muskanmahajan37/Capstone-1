@@ -2,22 +2,29 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using System;
 
-public class Dwarf : MonoBehaviour
-{
+public class Dwarf : MonoBehaviour {
+
+
     Tile currentTile;
 
-    public Tilemap tileMap;
-    public TileBase selfPicture;
+
+    private static float MOVEMENT_SPEED = 0.2f; // How much time in seconds should the dwarf wait before moving to a new tile? 
+    private static Tilemap tileMap;
+    private static TileBase selfPicture;
 
     // Fields for moving a dwarf
     private Queue<Tile> path;
     private Tile targetTile;
 
+    public static void staticInitalize(Tilemap tileMap, TileBase picture) {
+        Dwarf.tileMap = tileMap;
+        Dwarf.selfPicture = picture;
+    }
 
-    // Start is called before the first frame update
-    void Start() {
-        currentTile = new Tile(5, 7);
+    public void initalize(Tile startingTile) {
+        currentTile = startingTile;
         drawSelf();
     }
 
@@ -27,36 +34,39 @@ public class Dwarf : MonoBehaviour
         tileMap.SetTile(drawPos, selfPicture);
     }
 
-
-    public void startPathingTest() {
-        this.startPathing(new Tile(20, 16));
+    #region Pathfinding
+    
+    public IEnumerator startPathing(Tile targetTile) {
+        Debug.Log("Nocab flag Dwarf 2");
+        updatePath(targetTile);
+        yield return StartCoroutine(followPath());
     }
-    private void startPathing(Tile targetTile) {
+
+    private void updatePath(Tile targetTile) {
         AStar pathFinder = new AStar(currentTile, targetTile);
         this.path = pathFinder.getPath();
         this.targetTile = targetTile;
-        InvokeRepeating("followPath", 0, GameSetup.TICK_RATE);
     }
 
-    private void followPath() {
-        // Move my position one down my current path
-        if (this.path.Count == 0) {
-            // If we've arrived at the end of the path
-            CancelInvoke("followPath");
-            return;
-        }
+    private IEnumerator followPath() {
+        Debug.Log("Nocab flag dwarf 3");
+        Debug.Log("Nocab dwarf pathCount: " + this.path.Count);
+        while (this.path.Count > 0) {
+            Debug.Log("Nocab flag dwarf 4");
+            // Ask the mapcontroller if the next tile is still open
+            if (MapController.singleton.moveDwarf(this, this.path.Peek())) {
+                // If we're cleared to move
+                this.changePosition(this.path.Dequeue());
+                yield return new WaitForSeconds(MOVEMENT_SPEED);
+            } else {
+                // Else, we were denied clearence to move
+                // Something must of changed as we were walking
+                // Find a new path
+                updatePath(targetTile);
+            }
 
-        // Ask the mapcontroller if the next tile is still open
-        if ( MapController.singleton.moveDwarf(this, this.path.Peek()) ) {
-            // If we're cleared to move
-            this.changePosition(this.path.Dequeue());
-        } else {
-            // Else, we were denied clearence to move
-            // Something must of changed as we were walking
-            // Find a new path
-            startPathing(targetTile);
+            yield return null;
         }
-
     }
 
     private void changePosition(Tile newPos) {
@@ -71,6 +81,18 @@ public class Dwarf : MonoBehaviour
 
         // Draw your new position
         drawSelf();
+    }
+
+    #endregion
+    
+    public IEnumerator assignWork(IBuilding building, Func<Dwarf, IBuilding, bool> callback) {
+        Debug.Log("Dwarf nocab flag assingWork 1");
+        Vector2Int buildingPos = building.position();
+        yield return StartCoroutine(startPathing(new Tile(buildingPos.x, buildingPos.y)));
+
+        // Once we're ready tell the GameController that we're ready for assignment
+        callback(this, building);
+        yield break;
     }
 
 }

@@ -68,13 +68,20 @@ public static class LongTermPlanningBuildings {
         HashSet<QGameState> result = new HashSet<QGameState>();
         result.Add(waitTransition(qEntry, WAIT_TIME));
 
-        if (canBuildWorker(qEntry)) {
-            // If we have the resources to build a new worker
-            result.Add(buildGoldMiner(qEntry));
-            result.Add(buildWoodUnit(qEntry));
-            result.Add(buildStoneMiner(qEntry));
-        }
+        BuildingGS gs = qEntry.gameState;
 
+
+        if (gs.canBuyWorker()) {
+            // If we have the resources to build a new worker
+            foreach (BuildingType bt in gs.getOpenSlots()) {
+                // One branch for every possible type of worker slot we can fill
+                QGameState neighbor = buyWorker(qEntry, bt);
+                result.Add(neighbor);
+            }
+        }
+        
+        // TODO: Possible building of buildings 
+        //       NOTE: why build a building if we can't populate it with a worker imediataly? 
 
         return result;
     }
@@ -219,83 +226,13 @@ public static class LongTermPlanningBuildings {
     }
 
     //////////////////////////////////////////////////
+    
 
-    private static readonly int workerBuildTime = 20;
-    private static readonly int workerCostGold = 30;
+    private static QGameState buyWorker(QGameState qGS, BuildingType bt) {
+        BuildingGS newGameState = waitGameState(qGS.gameState, 0);
+        newGameState.buyAndAssignWorker(bt);
 
-
-    private static bool canBuildWorker(QGameState qe) {
-        return qe.gameState.getStockpile(ResourceType.Gold) >= workerCostGold &&
-            qe.gameState.getStockpile(ResourceType.Stone) >= workerCostStone &&
-            qe.gameState.getStockpile(ResourceType.Wood) >= workerCostWood;
+        return new QGameState(newGameState, qGS, WorkHelper.assignWorkerTo(bt), 0);
     }
-
-
-
-
-
-
-
-
-
-
-
-    #region building Building objects
-
-    // TODO: Reduce code here
-    private static bool canBuildBankBuilding(QGameState qe) {
-        BuildingGS gs = qe.gameState;
-        foreach(ResourceChange rc in BuildingFactory.bankBuildCost) {
-            if (gs.getStockpile(rc.resourceType) < rc.change) {
-                // If the current stockpile is less than the required change
-                // NOTE: The cost of building a building should always be positive
-                return false;
-            }
-        }
-        return true;
-    }
-    private static QGameState buildBankBuilding(QGameState qe) {
-        BuildingGS oldGameState = qe.gameState;
-        BuildingGS newGameState = waitGameState(oldGameState, workerBuildTime);
-
-        
-        newGameState.buyBuilding(BuildingFactory.buildNewBank());
-
-        
-        int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.NewGoldMiner, timeCost);
-
-    }
-
-    //////////////////////////////////////////////////////////
-
-    private static QGameState buildStoneMasonBuilding(QGameState qe)
-    {
-        BuildingGS oldGameState = qe.gameState;
-        BuildingGS newGameState = waitGameState(oldGameState, workerBuildTime);
-
-        newGameState.buyBuilding(BuildingFactory.buildNewStoneMason());
-
-        int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.NewStoneMiner, timeCost);
-
-    }
-
-
-    //////////////////////////////////////////////////////////
-
-    private static QGameState buildWoodCuttingBuilding(QGameState qe)
-    {
-        BuildingGS oldGameState = qe.gameState;
-        BuildingGS newGameState = waitGameState(oldGameState, workerBuildTime);
-
-        newGameState.buyBuilding(BuildingFactory.buildNewWoodCutter());
-
-        int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.NewWoodsman, timeCost);
-
-    }
-
-    #endregion
-
+    
 }

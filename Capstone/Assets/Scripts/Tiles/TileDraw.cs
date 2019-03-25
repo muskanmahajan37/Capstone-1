@@ -14,6 +14,8 @@ public class TileDraw : MonoBehaviour {
 
     public Tilemap peopleTileMap;  // Note, currently dwarfs draw themselves so this should not really be used much
 
+    public Tilemap buildingTileMap;
+
     #region specific drawing
 
     #region ground
@@ -50,6 +52,13 @@ public class TileDraw : MonoBehaviour {
         foreach(Tile t in tiles) {
             drawNewRock(t);
         }
+    }
+    #endregion
+
+    #region buildings
+    public void drawBuilding(IBuilding b) {
+        Vector3Int drawPos = new Vector3Int(b.position().x, b.position().y, GameSetup.BUILDING_LAYER);
+        buildingTileMap.SetTile(drawPos, b.buildingIcon());
     }
     #endregion
 
