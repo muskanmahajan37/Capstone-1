@@ -37,7 +37,6 @@ public class Dwarf : MonoBehaviour {
     #region Pathfinding
     
     public IEnumerator startPathing(Tile targetTile) {
-        Debug.Log("Nocab flag Dwarf 2");
         updatePath(targetTile);
         yield return StartCoroutine(followPath());
     }
@@ -49,10 +48,7 @@ public class Dwarf : MonoBehaviour {
     }
 
     private IEnumerator followPath() {
-        Debug.Log("Nocab flag dwarf 3");
-        Debug.Log("Nocab dwarf pathCount: " + this.path.Count);
         while (this.path.Count > 0) {
-            Debug.Log("Nocab flag dwarf 4");
             // Ask the mapcontroller if the next tile is still open
             if (MapController.singleton.moveDwarf(this, this.path.Peek())) {
                 // If we're cleared to move
@@ -86,7 +82,6 @@ public class Dwarf : MonoBehaviour {
     #endregion
     
     public IEnumerator assignWork(IBuilding building, Func<Dwarf, IBuilding, bool> callback) {
-        Debug.Log("Dwarf nocab flag assingWork 1");
         Vector2Int buildingPos = building.position();
         yield return StartCoroutine(startPathing(new Tile(buildingPos.x, buildingPos.y)));
 

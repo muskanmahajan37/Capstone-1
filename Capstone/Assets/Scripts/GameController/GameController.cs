@@ -144,7 +144,6 @@ public class GameController : MonoBehaviour
     }
 
     public void cleanAssignWorker(IBuilding building) {
-        Debug.Log("Nocab flag GameController cleanAssignWorker 1");
         // Grabs a random Dwarf and tells them to walk to a building
         Dwarf d = this.freeWorkers.Dequeue();
 

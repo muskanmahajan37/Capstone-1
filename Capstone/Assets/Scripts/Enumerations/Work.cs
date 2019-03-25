@@ -11,6 +11,11 @@ public enum Work {
     BuyWorkerStoneMason,
     BuyWorkerWoodCutter,
 
+    // Depreciated:
+    NewGoldMiner,
+    NewStoneMiner,
+    NewWoodsman,
+
     EMPTY // To represent a "null" value of work which is different than Wait
 }
 

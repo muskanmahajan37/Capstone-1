@@ -35,7 +35,6 @@ public class AssignWorkerButton : MonoBehaviour
     }
     
     private void callGameController() {
-        Debug.Log("Nocab flag AssignWorkerButton 1");
         GameController.singleton.cleanAssignWorker(focusedBuilding);
         tryTurnOn(focusedBuilding);
     }
