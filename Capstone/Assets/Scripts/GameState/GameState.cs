@@ -76,4 +76,15 @@ public class GameState {
         }
         return true;
     }
+
+    public override string ToString()
+    {
+        string output = "";
+        foreach (Resource r in this.resources.Values)
+        {
+            output += string.Format("{0}: {1}", r.name, r.resourceCount);
+            output += ", ";
+        }
+        return output;
+    }
 }
