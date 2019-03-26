@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using PriorityQueueDemo;
 
-public class LongTermPlanningOld {
+public class LongTermPlanningScratch {
 
     private static readonly int WAIT_TIME = 10;
     private static readonly int MAX_DEPTH = 5000000; // 5M searches
@@ -193,7 +193,7 @@ public class LongTermPlanningOld {
         endGS.gold -= bankGoldCost;
         endGS.goldPerTick += bankGPTChange;
 
-        return new GameStateTransitionOld(endGS, Work.NewGoldMiner, bankBuildTime);
+        return new GameStateTransitionOld(endGS, Work.BuyWorkerBank, bankBuildTime);
     }
 
 }

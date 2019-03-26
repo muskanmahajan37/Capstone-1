@@ -221,8 +221,8 @@ MonoBehaviour:
   addWorkerGoldBtn: {fileID: 1701838362}
   addWorkerStoneBtn: {fileID: 1566699603}
   addWorkerWoodBtn: {fileID: 151644848}
-  mainTextDisplay: {fileID: 0}
-  otherTextDisplay: {fileID: 0}
+  mainTextDisplay: {fileID: 1036013354}
+  otherTextDisplay: {fileID: 1762538800}
 --- !u!1 &151644846
 GameObject:
   m_ObjectHideFlags: 0

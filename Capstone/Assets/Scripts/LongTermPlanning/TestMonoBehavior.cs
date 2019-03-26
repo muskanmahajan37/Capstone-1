@@ -44,10 +44,10 @@ public class TestMonoBehavior : MonoBehaviour
         foreach (Work w in LongTermPlanning.plan(initialGS, targetGS))
         {
             if (w == Work.EMPTY) { }
-            else if (w == Work.NewGoldMiner) { buildBank++; }
+            else if (w == Work.BuyWorkerBank) { buildBank++; }
             else if (w == Work.Wait) { waitCount++; }
-            else if (w == Work.NewStoneMiner) { stoneMiner++; }
-            else if (w == Work.NewWoodsman) { woodsman++; }
+            else if (w == Work.BuyWorkerStoneMason) { stoneMiner++; }
+            else if (w == Work.BuyWorkerWoodCutter) { woodsman++; }
         }
         Debug.Log("Wait count:  " + waitCount + "  bank build:  " + buildBank + "  stoneMiner:  " + stoneMiner + "  woodsman:  " + woodsman);
 

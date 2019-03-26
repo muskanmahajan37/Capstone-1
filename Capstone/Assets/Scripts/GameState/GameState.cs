@@ -4,19 +4,10 @@ using System.Text;
 using UnityEngine;
 
 
-public enum Work
-{
-    Wait,
-    NewGoldMiner,
-    NewStoneMiner,
-    NewWoodsman,
-
-    EMPTY // To represent a "null" value of work which is different than Wait
-}
 
 
-public class GameState
-{
+
+public class GameState {
     /**
      * To represent the current resources and expected income of a game world
      */
