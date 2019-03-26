@@ -7,6 +7,7 @@ public class RemoveWorkerButton : MonoBehaviour {
 
     private Button myButton;
     private IBuilding focusedBuilding;
+    public DetailsPanelController detailsPanel;
 
     private void Start() {
         myButton = GetComponent<Button>();
@@ -35,6 +36,7 @@ public class RemoveWorkerButton : MonoBehaviour {
     private void myClick() {
         GameController.singleton.unassignWorker(focusedBuilding);
         tryTurnOn(focusedBuilding);
+        detailsPanel.redraw();
     }
 
 }

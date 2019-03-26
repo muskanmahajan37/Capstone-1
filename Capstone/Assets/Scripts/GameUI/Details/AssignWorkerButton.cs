@@ -8,10 +8,12 @@ public class AssignWorkerButton : MonoBehaviour
     private Button myButton;
     private IBuilding focusedBuilding;
 
+    public DetailsPanelController detailsPanel;
+
     private void Start() {
         myButton = GetComponent<Button>();
 
-        myButton.onClick.AddListener(delegate { this.callGameController(); });
+        myButton.onClick.AddListener(delegate { this.myClick(); });
     }
 
     private void turnOn() { this.myButton.interactable = true; }
@@ -34,8 +36,9 @@ public class AssignWorkerButton : MonoBehaviour
         this.myButton.interactable = false;
     }
     
-    private void callGameController() {
+    private void myClick() {
         GameController.singleton.cleanAssignWorker(focusedBuilding);
         tryTurnOn(focusedBuilding);
+        detailsPanel.redraw();
     }
 }

@@ -159,6 +159,8 @@ public class GameController : MonoBehaviour
         // This will dissapear the worker wherever it is on the map
         // It is assumed the worker has already been removed from the free worker queue
 
+        Debug.Log("Nocab flag 1");
+
         // The gameState will update the worker counts for us
         this.gameState.assignWorker(building);
 

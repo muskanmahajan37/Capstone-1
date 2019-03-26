@@ -30,7 +30,9 @@ public class DetailsPanelController : MonoBehaviour {
     }
 
     public void redraw() {
+        Debug.Log("Drawing");
         if (this.targetBuilding == null) {
+            Debug.Log("Drawing failed");
             this.clear();
             return;
         }
@@ -41,10 +43,11 @@ public class DetailsPanelController : MonoBehaviour {
         sb.Append("Building type: ");
         sb.Append(Enum.GetName(typeof(BuildingType), this.targetBuilding.getBuildingType()));  // TODO: Pretyify this string
         sb.Append("\n\nWorkers: ");
+        Debug.Log("current workers: " + targetBuilding.currentWorkers());
         sb.Append(targetBuilding.currentWorkers());
         sb.Append("\\");
-        sb.Append(targetBuilding.openWorkerSlots());;
-        sb.Append("\nResource Change:\n");
+        sb.Append(targetBuilding.currentWorkers() + targetBuilding.openWorkerSlots());
+        sb.Append("\n-Resource Change-\n");
         foreach(ResourceChange rc in targetBuilding.changePerTick()) {
             sb.Append(Enum.GetName(typeof(ResourceType), rc.resourceType));
             sb.Append(": ");
