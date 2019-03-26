@@ -116,7 +116,7 @@ public class StartGameScript : MonoBehaviour
                 sb.Append("Actor game states: \n");
                 //Debug.Log("Actor game states:");
                 foreach(GameState gs in gameStates) {
-                    sb.Append(gs.ToString());
+                    sb.Append(gs);
                     sb.Append('\n');
                     //Debug.Log(gs);
                 }

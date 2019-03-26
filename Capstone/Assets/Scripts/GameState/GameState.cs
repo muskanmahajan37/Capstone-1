@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 
 
@@ -88,12 +89,15 @@ public class GameState
 
     public override string ToString()
     {
-        string output = "";
+        StringBuilder output = new StringBuilder();
         foreach (Resource r in this.resources.Values)
         {
-            output += string.Format("{0}: {1}", r.name, r.resourceCount);
-            output += ", ";
+            Debug.Log("inside: " + r.name + ":" + r.resourceCount);
+            output.Append(r.name);
+            output.Append(":");
+            output.Append(r.resourceCount);
+            output.Append(", ");
         }
-        return output;
+        return output.ToString();
     }
 }
