@@ -4,9 +4,6 @@ using System.Text;
 using UnityEngine;
 
 
-
-
-
 public class GameState {
     /**
      * To represent the current resources and expected income of a game world

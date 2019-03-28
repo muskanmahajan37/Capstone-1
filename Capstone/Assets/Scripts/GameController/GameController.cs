@@ -158,17 +158,18 @@ public class GameController : MonoBehaviour
         // Forces the provided worker to be assigned into the building
         // This will dissapear the worker wherever it is on the map
         // It is assumed the worker has already been removed from the free worker queue
-
-        Debug.Log("Nocab flag 1");
-
+        
         // The gameState will update the worker counts for us
         this.gameState.assignWorker(building);
 
         // Update the display
         // TODO: Break this function up into dispalyInputs, displayOutputs and displayCosts
         displayBuildingResouceDelta(building);
+        d.eraseSelf();
+
         // TODO: Worker pooling
-        GameObject.Destroy(d);
+        GameObject.Destroy(d.gameObject);
+
         return true;
     }
 

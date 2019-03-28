@@ -135,7 +135,7 @@ public static class BuildingFactory {
     #endregion
 
 
-    public static List<BuildingType> allBuildings = new List<BuildingType>(3) {
+    public static readonly List<BuildingType> allBuildings = new List<BuildingType>(3) {
         BuildingType.Bank,
         BuildingType.StoneMason,
         BuildingType.WoodCutter,

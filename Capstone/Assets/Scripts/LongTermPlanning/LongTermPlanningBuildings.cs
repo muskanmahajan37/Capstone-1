@@ -43,25 +43,6 @@ public static class LongTermPlanningBuildings {
         return maxWaitTime + totalRPTDelta;
     }
 
-    // TODO: put this somewhere else
-    public static uint sigfigify(int n, int sigFigs) { return sigfigify((uint)n, sigFigs); }
-    public static uint sigfigify(uint n, int sigFigs) {
-        // NOTE: When casting a negative int into a uint the far left "negative marker" will cout as a sig fig
-
-        int sizeOfN = 0;
-        uint nPrime = n;
-        while (nPrime > 0) {
-            nPrime /= 10;
-            sizeOfN++;
-        }
-
-        if (sigFigs >= sizeOfN) { return n; }
-
-        int digitsCut = sizeOfN - sigFigs;
-        uint trimmedN = n / (uint)Mathf.Pow(10, digitsCut); // Cut off the right most values
-        return trimmedN * (uint)Mathf.Pow(10, digitsCut); // Replace them all with 0s 
-    }
-
     private static HashSet<QGameState> getNeighbors(QGameState qEntry) {
         // For a given game state return all valid edges out of it
 
@@ -71,6 +52,7 @@ public static class LongTermPlanningBuildings {
         BuildingGS gs = qEntry.gameState;
 
 
+        // Branches related to workers
         if (gs.canBuyWorker()) {
             // If we have the resources to build a new worker
             foreach (BuildingType bt in gs.getOpenSlots()) {
@@ -80,11 +62,40 @@ public static class LongTermPlanningBuildings {
             }
         }
         
-        // TODO: Possible building of buildings 
-        //       NOTE: why build a building if we can't populate it with a worker imediataly? 
 
+        // Branches related to Buildings
+        // TODO: Why build a building if we can't populate it with a worker? 
+        foreach (BuildingType bt in BuildingFactory.allBuildings) {
+            // One branch for every new possible building
+            IBuilding possibleBuilding = BuildingFactory.buildNew(bt);
+            if (qEntry.gameState.canBuyBuilding(possibleBuilding)) {
+                // If we can build this building, then add a branch
+                QGameState neighbor = buyBuilding(qEntry, possibleBuilding);
+                result.Add(neighbor);
+            }
+        }
+        
         return result;
     }
+
+
+    public static int planTotalIGTime(BuildingGS initialGS, BuildingGS targetGS) {
+        QGameState currentQE = BuildPlan(initialGS, targetGS);
+        if (currentQE == null) {
+            return -1;
+        }
+
+        int totalCost = currentQE.costToGetHere;
+        /*
+        while (currentQE != null) {
+            Debug.Log(Enum.GetName(typeof(Work), currentQE.transitionWork));
+            currentQE = currentQE.parent;
+        }
+        */
+
+        return totalCost;
+    }
+
 
     public static Queue<Work> plan(BuildingGS initialGS, BuildingGS targetGS) {
 
@@ -123,41 +134,33 @@ public static class LongTermPlanningBuildings {
 
     }
 
-
     private static QGameState BuildPlan(BuildingGS initialGS, BuildingGS targetGS) {
-
-        //AccordionPriorityQueue<int, QGameState> priorityQueue = new AccordionPriorityQueue<int, QGameState>(400);
+        
+        // Initialize data structures
         MemoryBoundedPriorityQueue<int, QGameState> priorityQueue = new MemoryBoundedPriorityQueue<int, QGameState>(200);
-        //PriorityQueue<int, QGameState> priorityQueue = new PriorityQueue<int, QGameState>(200);
-
         Dictionary<BuildingGS, int> bestCostToGetHere = new Dictionary<BuildingGS, int>();
 
-
+        // Add initial state to queue
         QGameState startQE = new QGameState(initialGS, null, Work.EMPTY, 0);
         int heuristic = compareGameState(initialGS, targetGS);
         priorityQueue.Enqueue(heuristic, startQE);
+        
+        // NOTE: Don't add the initial state to the bestCostToGetHere, that will be done automatically
 
         int totalChecks = 0;
-
         while (priorityQueue.Count > 0) {
-
             totalChecks++;
-
             QGameState qe = priorityQueue.DequeueValue();
 
-            if (compareGameState(qe.gameState, targetGS) <= 0)
-            {
+            // Early exit conditions
+            if (compareGameState(qe.gameState, targetGS) <= 0) {
                 // If we are 0 distance away from the target game state
                 // IE: If we have found the target game state
                 return qe;
-            }
-
-            if (totalChecks > MAX_DEPTH)
-            {
-                Debug.Log("exit case max depth");
+            } else if (totalChecks > MAX_DEPTH) {
                 return null;
             }
-
+            
             if (bestCostToGetHere.ContainsKey(qe.gameState) &&
                 bestCostToGetHere[qe.gameState] <= qe.costToGetHere) {
                 // If we've already explored this game state
@@ -167,12 +170,9 @@ public static class LongTermPlanningBuildings {
                 // Else, this Queue Entry represents a cheeper path to get to this node
                 bestCostToGetHere[qe.gameState] = qe.costToGetHere;
             }
-
-
+            
             foreach(QGameState neighbor in getNeighbors(qe)) {
                 // The neighbor already has an updated gamestate, a job and an updated cost
-
-
 
                 if (bestCostToGetHere.ContainsKey(neighbor.gameState) &&
                     bestCostToGetHere[neighbor.gameState] <= neighbor.costToGetHere) {
@@ -182,13 +182,11 @@ public static class LongTermPlanningBuildings {
 
                 heuristic = compareGameState(neighbor.gameState, targetGS) + neighbor.costToGetHere;
                 priorityQueue.Enqueue(heuristic, neighbor);
-
-            }
-
+            } // End foreach neighbor
         } // End while queue is NOT empty
-        Debug.Log("exit case no path");
-        return null;
 
+        // If we get here => no path found
+        return null;
     }
 
     private class QGameState {
@@ -210,6 +208,8 @@ public static class LongTermPlanningBuildings {
     }
 
 
+    // TODO: Move the below to a factory class
+
     ////////////////////////////////////////////////
 
     // This function represents an edge
@@ -229,10 +229,17 @@ public static class LongTermPlanningBuildings {
     
 
     private static QGameState buyWorker(QGameState qGS, BuildingType bt) {
-        BuildingGS newGameState = waitGameState(qGS.gameState, 0);
+        BuildingGS newGameState = waitGameState(qGS.gameState, 0);  // TODO: We currently thing a worker takes 0 to build and assign
         newGameState.buyAndAssignWorker(bt);
-
-        return new QGameState(newGameState, qGS, WorkHelper.assignWorkerTo(bt), 0);
+        int costToGetHere = qGS.costToGetHere + 0;   // TODO: Worker time currently = 0  :(
+        return new QGameState(newGameState, qGS, WorkHelper.assignWorkerTo(bt), costToGetHere); 
     }
     
+    private static QGameState buyBuilding(QGameState qGS, IBuilding newBuilding) {
+        BuildingGS newGameState = waitGameState(qGS.gameState, 10); // TODO: Currently we assume all buildings take 10 ticks to build
+        newGameState.buyBuilding(newBuilding);
+        int costToGetHere = qGS.costToGetHere + 10;    // TODO: Building time currently = 10 :(
+        return new QGameState(newGameState, qGS, WorkHelper.buildBuilding(newBuilding), costToGetHere); 
+    }
+
 }

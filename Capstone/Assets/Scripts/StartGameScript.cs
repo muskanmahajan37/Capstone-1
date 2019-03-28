@@ -8,7 +8,7 @@ using UnityEngine.UI;
 public class StartGameScript : MonoBehaviour
 {
     private static readonly long fps = 60;
-    private readonly long ACTION_INTERVAL = fps * LongTermPlanning.WAIT_TIME;
+    private readonly long ACTION_INTERVAL = fps * LongTermPlanning.public_wait_time;
     private readonly long LOG_INTERVAL = fps * 5;
 
     private static long gameTime = 0;

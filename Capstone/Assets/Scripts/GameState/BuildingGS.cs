@@ -43,7 +43,11 @@ public class BuildingGS
         // TODO: Do we really need to deep copy all the buildings? 
         this.buildings = new Dictionary<BuildingType, HashSet<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
+        this.resourceChangePerTick = new Dictionary<ResourceType, int>();
+        this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
 
+
+        // Buildings
         foreach(KeyValuePair<BuildingType, HashSet<IBuilding>> kvp in other.buildings) {
             foreach(IBuilding otherBuilding in kvp.Value) {
                 // Clone and add every building to this game state
@@ -53,9 +57,17 @@ public class BuildingGS
             }
         }
         
+        // Stockpile
         foreach(KeyValuePair<ResourceType, int> kvp in other.resourceStockpile) {
             this.addToStockpile(kvp.Key, kvp.Value);
         }
+
+        // Resource Per Tick
+        foreach(KeyValuePair<ResourceType, int> kvp in other.resourceChangePerTick) {
+            this.addResourcePerTick(kvp.Key, kvp.Value);
+        }
+
+
     }
 
     #region accessors
@@ -145,15 +157,17 @@ public class BuildingGS
         this.buildings[newBT].Add(newBuilding);
         
         // Update the income per tick of this game state
-        foreach (ResourceChange rc in newBuilding.changePerTick())
-        {
-            if (!this.resourceChangePerTick.ContainsKey(rc.resourceType)) { this.resourceChangePerTick[rc.resourceType] = 0; }
-
-            this.resourceChangePerTick[rc.resourceType] += rc.change;
+        foreach (ResourceChange rc in newBuilding.changePerTick()) {
+            this.addResourcePerTick(rc.resourceType, rc.change);
         }
         
-        if ( ! this.openSpots.ContainsKey(newBT)) { this.openSpots[newBT] = new Queue<IBuilding>(); }
-        this.openSpots[newBT].Enqueue(newBuilding);
+        if (newBuilding.openWorkerSlots() > 0) {
+            // If there's open slots
+            
+            // Add the open slots to the queue
+            if (!this.openSpots.ContainsKey(newBT)) { this.openSpots[newBT] = new Queue<IBuilding>(); }
+            this.openSpots[newBT].Enqueue(newBuilding);
+        }
     }
 
     #endregion
@@ -272,6 +286,20 @@ public class BuildingGS
         else       { this.resourceStockpile[rt] -= change; }
     }
 
+    // Resource Per Tick
+    public void addResourcePerTick(ResourceType rt, int addition) {
+        if (!this.resourceChangePerTick.ContainsKey(rt))
+        { this.resourceChangePerTick[rt] = 0; }
+
+        this.resourceChangePerTick[rt] += addition;
+    }
+
+    public void setStockpile(ResourceType rt, int newCount) {
+        // NOTE: This should only ever be used for testing reasons
+        this.addToStockpile(new ResourceChange(rt, newCount)); 
+    }
+    
+
     #endregion
     
     public override int GetHashCode() {
@@ -279,6 +307,7 @@ public class BuildingGS
         // - the same stockpiles
         // - the same income per tick
 
+        // TODO: round this game object
         // TODO: Consider number of buildings an important field
         // TODO: Consider adding "free-land remaining" to this hash
         int hash = 17;
@@ -324,6 +353,88 @@ public class BuildingGS
             }
             
             if (this.resourceChangePerTick[kvp.Key] != otherGS.resourceChangePerTick[kvp.Key]) {
+                // If the change per tick is different
+                return false;
+            }
+
+        }
+        return true;
+    }
+
+}
+
+
+
+public class RoundableBuildingGameState : BuildingGS {
+    protected int percision = 2;
+
+    public RoundableBuildingGameState() : base() { }
+    public RoundableBuildingGameState(int percision) : base()  {
+        this.percision = percision;
+    }
+    public RoundableBuildingGameState(IEnumerable<ResourceChange> startingResources, int percision) : base(startingResources) {
+        this.percision = percision;
+    }
+
+
+
+    public override int GetHashCode()
+    {
+        // Two game States are equal if they have:
+        // - the same stockpiles
+        // - the same income per tick
+
+        // TODO: round this game object
+        // TODO: Consider number of buildings an important field
+        // TODO: Consider adding "free-land remaining" to this hash
+        int hash = 17;
+        foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile)
+        {
+            int resourceChangePerTick = this.resourceChangePerTick[kvp.Key];
+            hash = (hash * 23) + Convert.ToInt32(kvp.Key);
+            hash = (hash * 23) + kvp.Value;
+            hash = (hash * 23) + resourceChangePerTick;
+        }
+        return hash;
+    }
+
+    public override bool Equals(object obj) {
+        /**
+         * Two Game States are equal if they have 
+         * - same resource stockpile
+         * - same resource income per tick
+         */
+
+        // TODO: Consider number of buildings an important field? Maybe how much free land is remaining? 
+
+        RoundableBuildingGameState otherGS = obj as RoundableBuildingGameState;
+        if (otherGS == null) { return false; }
+
+        // Different number of fields => fail
+        if (this.resourceStockpile.Count != otherGS.resourceChangePerTick.Count ||
+            this.resourceChangePerTick.Count != otherGS.resourceChangePerTick.Count) {
+            return false;
+        }
+
+        // Check type of resources
+        int otherResourceCount;
+        foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile) {
+            if (!otherGS.resourceStockpile.TryGetValue(kvp.Key, out otherResourceCount)) {
+                // Try to access a given key in the other dictionary
+                // If it fails, return false
+                return false;
+            }
+
+            int thisStockpileSigFig = MathHelp.sigfigify(kvp.Value, this.percision);
+            int otherStockpileSigFig = MathHelp.sigfigify(otherResourceCount, this.percision);
+            if (thisStockpileSigFig != otherStockpileSigFig) {
+                // If the key is contained, but the stockpile count is different
+                return false;
+            }
+
+            int this_RPT_SigFig = MathHelp.sigfigify(this.resourceChangePerTick[kvp.Key], this.percision);
+            int other_RPT_SigFig = MathHelp.sigfigify(otherGS.resourceChangePerTick[kvp.Key], this.percision);
+            if (this_RPT_SigFig != other_RPT_SigFig) {
                 // If the change per tick is different
                 return false;
             }

@@ -5,8 +5,9 @@ using PriorityQueueDemo;
 using System;
 
 public static class LongTermPlanning {
-
-    public static readonly int WAIT_TIME = 10;
+    
+    private static int WAIT_TIME = 20;
+    public static int public_wait_time { get { return WAIT_TIME; } set { WAIT_TIME = Mathf.Max(0, value); } }
     public static readonly int MAX_DEPTH = 500000; // 500K searches
 
 
@@ -74,6 +75,15 @@ public static class LongTermPlanning {
 
 
         return result;
+    }
+
+    public static int planTotalIGTime(GameState initialGS, GameState targetGS) {
+        QGameState currentQE = BuildPlan(initialGS, targetGS);
+        if (currentQE == null) {
+            return -1;
+        }
+
+        return currentQE.costToGetHere;
     }
 
     public static Queue<Work> plan(GameState initialGS, GameState targetGS) {

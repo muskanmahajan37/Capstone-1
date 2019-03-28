@@ -10,7 +10,7 @@ public class Dwarf : MonoBehaviour {
     Tile currentTile;
 
 
-    private static float MOVEMENT_SPEED = 0.2f; // How much time in seconds should the dwarf wait before moving to a new tile? 
+    private static float MOVEMENT_SPEED = 0.05f; // How much time in seconds should the dwarf wait before moving to a new tile? 
     private static Tilemap tileMap;
     private static TileBase selfPicture;
 
@@ -28,7 +28,12 @@ public class Dwarf : MonoBehaviour {
         drawSelf();
     }
 
-    private void drawSelf() {
+    public void eraseSelf() {
+        Vector3Int erasePos = new Vector3Int(this.currentTile.position.x, this.currentTile.position.y, GameSetup.CHARACTER_LAYER);
+        tileMap.SetTile(erasePos, null);
+    }
+
+    public void drawSelf() {
         // Redraw this dwarf at this.currentTile
         Vector3Int drawPos = new Vector3Int(this.currentTile.position.x, this.currentTile.position.y, GameSetup.CHARACTER_LAYER);
         tileMap.SetTile(drawPos, selfPicture);
@@ -67,15 +72,9 @@ public class Dwarf : MonoBehaviour {
 
     private void changePosition(Tile newPos) {
         // Draw yourself onto the map at the provided Tile
-
-        // First erase your old position
-        Vector3Int erasePos = new Vector3Int(this.currentTile.position.x, this.currentTile.position.y, GameSetup.CHARACTER_LAYER);
-        tileMap.SetTile(erasePos, null);
-
-        // Now we're clear to update our current tile
+        
+        eraseSelf();
         this.currentTile = newPos;
-
-        // Draw your new position
         drawSelf();
     }
 
