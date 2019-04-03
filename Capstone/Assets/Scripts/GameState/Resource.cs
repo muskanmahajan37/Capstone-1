@@ -6,8 +6,7 @@ public class Resource {
     /**
      * To represent a resource counter for a single type of resource
      */
-
-
+    
     public readonly string name; // The name/ what is this resource
 
     public int resourceCount; // How many resources are in the stockpile 

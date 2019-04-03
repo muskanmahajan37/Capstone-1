@@ -13,12 +13,18 @@ public enum Work {
     BuyWorkerBank,
     BuyWorkerStoneMason,
     BuyWorkerWoodCutter,
+
+    BuyWorkerSilverMine,
+    BuyWorkerSteelSmith,
     
     // Building construction
     BuyBuildingBank,
     BuyBuildingStoneMason,
     BuyBuildingWoodCutter,
-    
+
+    BuyBuildingSilverMine,
+    BuyBuildingSteelSmith,
+
     // Depreciated:
     NewGoldMiner,
     NewStoneMiner,
@@ -34,7 +40,10 @@ public static class WorkHelper {
             case BuildingType.Bank:       return Work.BuyWorkerBank;
             case BuildingType.StoneMason: return Work.BuyWorkerStoneMason;
             case BuildingType.WoodCutter: return Work.BuyWorkerWoodCutter;
-                
+
+            case BuildingType.SilverMine: return Work.BuyWorkerSilverMine;
+            case BuildingType.SteelSmith: return Work.BuyWorkerSteelSmith;
+
             case BuildingType.NONE:
             default:
                 throw new System.Exception("Unknown building type, can't convert to Work enum. BT: " + Enum.GetName(typeof(BuildingType), bt));
@@ -47,6 +56,9 @@ public static class WorkHelper {
             case BuildingType.Bank:       return Work.BuyBuildingBank;
             case BuildingType.StoneMason: return Work.BuyBuildingStoneMason;
             case BuildingType.WoodCutter: return Work.BuyBuildingWoodCutter;
+
+            case BuildingType.SilverMine: return Work.BuyBuildingSilverMine;
+            case BuildingType.SteelSmith: return Work.BuyBuildingSteelSmith;
 
             case BuildingType.NONE:
             default:

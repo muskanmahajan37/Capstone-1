@@ -9,11 +9,16 @@ public class BuildFactoryMonobehavior : MonoBehaviour
     public TileBase masonSprite;
     public TileBase woodCutterSprite;
 
+    public TileBase silverMineSprite;
+    public TileBase steelBlacksmithSprite;
+
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         BuildingFactory.bankTile = this.bankSprite;
         BuildingFactory.stoneMasonTile = this.masonSprite;
         BuildingFactory.woodCutterTile = this.woodCutterSprite;
+
+        BuildingFactory.silverMineTile = this.silverMineSprite;
+        BuildingFactory.steelBlacksmithTile = this.steelBlacksmithSprite;
     }
 }

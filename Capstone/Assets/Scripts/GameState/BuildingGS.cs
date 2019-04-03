@@ -9,7 +9,7 @@ public class BuildingGS
     // Keeping track of what type of buildings exist is important
     // for when we want to redistribute workers and- or destroy buildings
       
-    protected Dictionary<BuildingType, HashSet<IBuilding>> buildings; // All the building this game state has sorted by their type
+    protected Dictionary<BuildingType, List<IBuilding>> buildings; // All the building this game state has sorted by their type
                                                                        // NOTE: You should never really add to this directly. 
                                                                        // Please use forceAddBuilding() function instead 
     protected Dictionary<ResourceType, int> resourceStockpile;
@@ -19,14 +19,14 @@ public class BuildingGS
 
     // TODO: Remove this constructor
     public BuildingGS() {
-        this.buildings = new Dictionary<BuildingType, HashSet<IBuilding>>();
+        this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
         this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
     }
 
     public BuildingGS(IEnumerable<ResourceChange> startingResources) {
-        this.buildings = new Dictionary<BuildingType, HashSet<IBuilding>>();
+        this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
         this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
@@ -41,14 +41,14 @@ public class BuildingGS
     public BuildingGS(BuildingGS other) {
         // NOTE: This will deepClone all the buildings in the provided other (IE: The populations will be coppied)
         // TODO: Do we really need to deep copy all the buildings? 
-        this.buildings = new Dictionary<BuildingType, HashSet<IBuilding>>();
+        this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
         this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
 
 
         // Buildings
-        foreach(KeyValuePair<BuildingType, HashSet<IBuilding>> kvp in other.buildings) {
+        foreach(KeyValuePair<BuildingType, List<IBuilding>> kvp in other.buildings) {
             foreach(IBuilding otherBuilding in kvp.Value) {
                 // Clone and add every building to this game state
                 // TODO: Do we have to clone? If we have units assigned then probably yes... 
@@ -62,12 +62,7 @@ public class BuildingGS
             this.addToStockpile(kvp.Key, kvp.Value);
         }
 
-        // Resource Per Tick
-        foreach(KeyValuePair<ResourceType, int> kvp in other.resourceChangePerTick) {
-            this.addResourcePerTick(kvp.Key, kvp.Value);
-        }
-
-
+        // Resources per tick will be handled by adding buildings
     }
 
     #region accessors
@@ -82,7 +77,7 @@ public class BuildingGS
         return 0;
     }
 
-    public IEnumerable<ResourceType> getResourceType() {
+    public IEnumerable<ResourceType> getAllResourceTypes() {
         return this.resourceStockpile.Keys;
     }
 
@@ -106,27 +101,50 @@ public class BuildingGS
     #endregion
 
     public void timePasses(int numberOfTicks) {
-        // Updates this game states resource stockpiles based on the buildings present
-        // NOTE: this uses the resourceChangePerTick dictionary, which is updated at building addition time
-        //       so this is not a direct update based on the buildings, but indirectly based on the buildings
-        //       This is done in the name of speed. A bug may mean that the buildings are not in line with
-        //       this.resourceChangePerTick field
-        
-        foreach(KeyValuePair<ResourceType, int> kvp in this.resourceChangePerTick) {
-            if (!this.resourceStockpile.ContainsKey(kvp.Key)) { this.resourceChangePerTick[kvp.Key] = 0; }
-            this.resourceStockpile[kvp.Key] += kvp.Value * numberOfTicks;
+        // Run every building and if the building can't afford the upkeep cost then it doesn't produce anything this tick
+        foreach(KeyValuePair<BuildingType, List<IBuilding>> kvp in this.buildings) {
+            BuildingType bt = kvp.Key;
+            foreach(IBuilding building in kvp.Value) {
+                if (canAffordUpkeep(building)) {
+                    // NOTE: building.simulate returns both output(+) and input(-) resources in 
+                    //       the provided List<ResourceChange> objects
+                    this.addToStockpile(building.simulate(numberOfTicks));
+                }
+                // Else can't afford upkeep means move to next building
+            }
         }
     }
 
     #region Modifying Buildings
 
-    public bool canBuyBuilding(BuildingType bt) {
-        foreach (ResourceChange rc in BuildingFactory.costToBuild(bt)) {
+    public bool canAffordUpkeep(IBuilding building) {
+        // Returns true if the all resources stay positive after paying the upkeep costs of 
+        // the provided building
+        foreach(ResourceChange rc in building.inputResourceCost()) {
+            if (!this.resourceStockpile.ContainsKey(rc.resourceType)) {
+                // No stockpile key => no resources
+                return false;
+            }
+
             if (this.resourceStockpile[rc.resourceType] < rc.change) {
-                // If our current stockpile is less than the price
+                // If we have less than the required amout to pay upkeep
                 return false;
             }
         }
+        return true;
+    }
+
+    public bool canBuyBuilding(BuildingType bt) {
+        // Check initial build costs
+        foreach (ResourceChange rc in BuildingFactory.allBluePrints[bt].buildCost) {
+            if (!this.resourceStockpile.ContainsKey(rc.resourceType) ||
+                this.resourceStockpile[rc.resourceType] < rc.change) {
+                // If  we don't have the right key or 
+                // our current stockpile is less than the price
+                return false;
+            }
+        }
+        
         return true;
     }
 
@@ -138,13 +156,13 @@ public class BuildingGS
     public void buyBuilding(IBuilding newBuilding) {
         // Note this function does no validation checking.
         // IE: going negative is ok, so a check must be made before calling this function
-
+        
         // First, change the stockpiles accordingly by subtracting the cost of the building
         this.subtractFromStockpile(newBuilding.costToBuild());
 
         // Then add the building and it's resource per tick count to this game state
         this.forceAddBuilding(newBuilding);
-
+        
     }
 
     public void forceAddBuilding(IBuilding newBuilding) {
@@ -153,7 +171,7 @@ public class BuildingGS
 
         // This is probably the only place that we add a building directly
         BuildingType newBT = newBuilding.getBuildingType();
-        if ( ! this.buildings.ContainsKey(newBT)) { this.buildings[newBT] = new HashSet<IBuilding>(); }
+        if ( ! this.buildings.ContainsKey(newBT)) { this.buildings[newBT] = new List<IBuilding>(); }
         this.buildings[newBT].Add(newBuilding);
         
         // Update the income per tick of this game state
@@ -220,12 +238,11 @@ public class BuildingGS
     // TODO: This seems like it's only really used by the LongTermPlanner
     public void buyAndAssignWorker(BuildingType bt) {
         // purchace and assign a worker to the provided building type
-        if ( ! this.canBuyWorker()) { return; }
-
-        if (( ! this.openSpots.ContainsKey(bt)) ||
-            this.openSpots[bt].Count <= 0)
-        {
+        if ( ! this.canBuyWorker() ||
+             ! this.openSpots.ContainsKey(bt) ||
+            this.openSpots[bt].Count <= 0) {
             // If we have no open spots for the specified building
+            throw new System.Exception();
             return;
         }
         // Else we have the gold and we have the spot 
@@ -277,7 +294,6 @@ public class BuildingGS
     private void changeResources(ResourceChange rc, bool addTo) {
         changeResources(rc.resourceType, rc.change, addTo);
     }
-
     private void changeResources(ResourceType rt, int change, bool addTo) {
         if (!this.resourceStockpile.ContainsKey(rt))
             { this.resourceStockpile[rt] = 0; }
@@ -306,13 +322,12 @@ public class BuildingGS
         // Two game States are equal if they have:
         // - the same stockpiles
         // - the same income per tick
-
-        // TODO: round this game object
+        
         // TODO: Consider number of buildings an important field
         // TODO: Consider adding "free-land remaining" to this hash
         int hash = 17;
         foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile) {
-            int resourceChangePerTick = this.resourceChangePerTick[kvp.Key];
+            int resourceChangePerTick = this.getPerTickChange(kvp.Key);
             hash = (hash * 23) + Convert.ToInt32(kvp.Key);
             hash = (hash * 23) + kvp.Value;
             hash = (hash * 23) + resourceChangePerTick;
@@ -360,13 +375,12 @@ public class BuildingGS
         }
         return true;
     }
-
 }
 
 
-
+// TODO: This might be broken in the long term planner
 public class RoundableBuildingGameState : BuildingGS {
-    protected int percision = 2;
+    protected int percision = 4;
 
     public RoundableBuildingGameState() : base() { }
     public RoundableBuildingGameState(int percision) : base()  {
@@ -375,25 +389,20 @@ public class RoundableBuildingGameState : BuildingGS {
     public RoundableBuildingGameState(IEnumerable<ResourceChange> startingResources, int percision) : base(startingResources) {
         this.percision = percision;
     }
-
-
-
-    public override int GetHashCode()
-    {
+    
+    public override int GetHashCode() {
         // Two game States are equal if they have:
         // - the same stockpiles
         // - the same income per tick
-
-        // TODO: round this game object
+        
         // TODO: Consider number of buildings an important field
         // TODO: Consider adding "free-land remaining" to this hash
         int hash = 17;
-        foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile)
-        {
+        foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile) {
             int resourceChangePerTick = this.resourceChangePerTick[kvp.Key];
             hash = (hash * 23) + Convert.ToInt32(kvp.Key);
-            hash = (hash * 23) + kvp.Value;
-            hash = (hash * 23) + resourceChangePerTick;
+            hash = (hash * 23) + MathHelp.sigfigify(kvp.Value, this.percision);
+            hash = (hash * 23) + MathHelp.sigfigify(resourceChangePerTick, this.percision);
         }
         return hash;
     }

@@ -27,10 +27,8 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
         BuildingGS initialGS = new RoundableBuildingGameState();
         initialGS.setStockpile(ResourceType.Gold, 1000);
         initialGS.addResourcePerTick(ResourceType.Gold, 0);
-
         initialGS.setStockpile(ResourceType.Stone, 1000);
         initialGS.addResourcePerTick(ResourceType.Stone, 0);
-
         initialGS.setStockpile(ResourceType.Wood, 1000);
         initialGS.addResourcePerTick(ResourceType.Wood, 0);
 
@@ -38,10 +36,8 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
         BuildingGS targetGS = new RoundableBuildingGameState();
         targetGS.setStockpile(ResourceType.Gold, 20000);
         targetGS.addResourcePerTick(ResourceType.Gold, 900);
-
         targetGS.setStockpile(ResourceType.Stone, 20000);
         targetGS.addResourcePerTick(ResourceType.Stone, 900);
-
         targetGS.setStockpile(ResourceType.Wood, 20000);
         targetGS.addResourcePerTick(ResourceType.Wood, 900);
 

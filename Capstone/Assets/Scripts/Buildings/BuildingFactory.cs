@@ -5,30 +5,117 @@ using UnityEngine.Tilemaps;
 using System;
 
 public static class BuildingFactory {
+    
 
 
-    // TODO: Whenever a new building is added to this factory make sure to update this function
-    public static HashSet<ResourceChange> costToBuild(BuildingType bt) {
-        // TODO: In the future, buildings may cost differently depending on when they were built
-        switch(bt) {
-            case BuildingType.Bank: return bankBuildCost;
-            case BuildingType.StoneMason: return stoneMasonBuildCost;
-            case BuildingType.WoodCutter: return swoodCutterBuildCost;
-
-            case BuildingType.NONE:
-            default: throw new System.Exception("Unknown building type, can't return cost. Building Type: " + Enum.GetName(typeof(BuildingType), bt));
-        }
+    #region bank
+    public static TileBase bankTile;  // All sprites are loaded from BuildFactoryMonobehavior.cs monobehavior object
+    public static readonly int bankProdPerPop = 5;
+    public static readonly int bankMaxPop = 3;
+    public static List<ResourceChange> bankBuildCost = new List<ResourceChange>() {
+        new ResourceChange(ResourceType.Stone, 10),
+        new ResourceChange(ResourceType.Gold, 1),
+        new ResourceChange(ResourceType.Wood, 15)
+    };
+    public static IBuilding buildNewBank(int x, int y) {
+        return new SimpleBuilding(
+            BuildingType.Bank,
+            ResourceType.Gold,
+            new Vector2Int(x, y));
     }
 
-    // Builds a new Positionless building
-    public static IBuilding buildNew(BuildingType bt) {
-        switch (bt) {
-            case BuildingType.Bank: return buildNewBank();
-            case BuildingType.StoneMason: return buildNewStoneMason();
-            case BuildingType.WoodCutter: return buildNewWoodCutter();
+    #endregion
 
+    #region stone mason
+    public static TileBase stoneMasonTile;
+    public static readonly int stoneMasonProdPerPop = 1;
+    public static readonly int stoneMasonMaxPop = 6;
+    public static readonly List<ResourceChange> stoneMasonBuildCost = new List<ResourceChange>()
+    {
+        new ResourceChange(ResourceType.Gold, 15),
+        new ResourceChange(ResourceType.Wood, 5)
+    };
+    public static IBuilding buildNewStoneMason(int x, int y) {
+        return new SimpleBuilding(
+            BuildingType.StoneMason,
+            ResourceType.Stone,
+            new Vector2Int(x, y));
+    }
+    #endregion
+
+    #region wood cutter
+    public static TileBase woodCutterTile;
+    public static readonly int woodCutterProdPerPop = 3;
+    public static readonly int woodCutterMaxPop = 2;
+    public static readonly List<ResourceChange> woodCutterBuildCost = new List<ResourceChange>() {
+        new ResourceChange(ResourceType.Gold, 8)
+    };
+    public static IBuilding buildNewWoodCutter(int x, int y) {
+        return new SimpleBuilding(
+            BuildingType.WoodCutter,
+            ResourceType.Wood,
+            new Vector2Int(x, y));
+    }
+
+    #endregion
+
+    #region Silver Mine
+    public static TileBase silverMineTile;
+    public static readonly int silverMineMaxPop = 100;
+    public static readonly List<ResourceChange> silverMineBuildCost = new List<ResourceChange>() {
+        new ResourceChange(ResourceType.Stone, 6),
+        new ResourceChange(ResourceType.Wood, 4)
+    };
+    public static readonly List<IResourceProducer> silverMineOutputResources = new List<IResourceProducer>() {
+        new SimpleResourceProducer(ResourceType.Silver, (int workers) => { return workers * 3; }),
+        new SimpleResourceProducer(ResourceType.Gold, (int workers) => { return workers * 1; }),
+    };
+    public static IBuilding buildNewSilverMine(int x, int y) {
+        return new MultiResourceBuilding( BuildingType.SilverMine, new Vector2Int(x, y));
+    }
+    #endregion
+
+    #region Steel Blacksmith
+    public static TileBase steelBlacksmithTile;
+    public static readonly int steelBlacksmithMaxPop = 4;
+    public static List<ResourceChange> steelBlacksmithBuildCost = new List<ResourceChange>() {
+        new ResourceChange(ResourceType.Gold, 500),
+        new ResourceChange(ResourceType.Stone, 80),
+        new ResourceChange(ResourceType.Wood, 200),
+        new ResourceChange(ResourceType.Iron, 20)
+    };
+    public static List<IResourceProducer> steelBlacksmithOutputResources = new List<IResourceProducer>() {
+        new SimpleResourceProducer(ResourceType.Steel, (int workers) => { return workers * 1; })
+    };
+    public static List<IResourceProducer> steelBlacksmithInputResources = new List<IResourceProducer>() {
+        new SimpleResourceProducer(ResourceType.Iron, (int workers) => { return workers * 1; }),
+        new SimpleResourceProducer(ResourceType.Coal, (int workers) => { return workers * 2; })
+    }; 
+    public static IBuilding buildNewSteelSmith(int x, int y) {
+        return new MultiResourceBuilding(BuildingType.SteelSmith, new Vector2Int(x, y));
+    }
+    #endregion
+    
+    public static readonly List<BuildingType> allBuildings = new List<BuildingType>() {
+        BuildingType.Bank,
+        BuildingType.StoneMason,
+        BuildingType.WoodCutter,
+
+        BuildingType.SilverMine,
+        BuildingType.SteelSmith
+    };
+
+    public static TileBase getIcon(BuildingType bt) {
+        switch (bt) {
+            case BuildingType.Bank: return bankTile;
+            case BuildingType.StoneMason: return stoneMasonTile;
+            case BuildingType.WoodCutter: return woodCutterTile;
+
+            case BuildingType.SilverMine: return silverMineTile;
+            case BuildingType.SteelSmith: return steelBlacksmithTile;
             case BuildingType.NONE:
-            default: throw new System.Exception("Unknown building type, can't build. Building Type: " + Enum.GetName(typeof(BuildingType), bt));
+            default:
+                throw new System.Exception("Unknown building type, can't get tile: " + Enum.GetName(typeof(BuildingType), bt));
         }
     }
 
@@ -38,118 +125,100 @@ public static class BuildingFactory {
             case BuildingType.StoneMason: return buildNewStoneMason(x, y);
             case BuildingType.WoodCutter: return buildNewWoodCutter(x, y);
 
+            case BuildingType.SilverMine: return buildNewSilverMine(x, y);
+            case BuildingType.SteelSmith: return buildNewSteelSmith(x, y);
             case BuildingType.NONE:
             default: throw new System.Exception("Unknown building type, can't build. Building Type: " + Enum.GetName(typeof(BuildingType), bt));
         }
     }
+    
+    public static Dictionary<BuildingType, BuildingBlueprint> allBluePrints = new Dictionary<BuildingType, BuildingBlueprint>() {
+        // Bank
+        { BuildingType.Bank, new BuildingBlueprint(
+            buildingname: "Bank",
+            maxPop: bankMaxPop,
+            buildCost: bankBuildCost,
+            outputResourceProduction: new List<IResourceProducer>() {
+                new SimpleResourceProducer(ResourceType.Gold, (int numOfWorkers) => { return numOfWorkers * bankProdPerPop; })
+                }
+            )
+        },
 
-    #region bank
-    public static TileBase bankTile;  // All sprites are loaded from BuildFactoryMonobehavior.cs monobehavior object
-    public static readonly int bankProdPerPop = 5;
-    public static readonly int bankMaxPop = 3;
-    public static readonly HashSet<ResourceChange> bankBuildCost = new HashSet<ResourceChange>() {
-        new ResourceChange(ResourceType.Stone, 100),
-        new ResourceChange(ResourceType.Gold, 10),
-        new ResourceChange(ResourceType.Wood, 150)
+        // Stone Mason
+        { BuildingType.StoneMason, new BuildingBlueprint(
+            buildingname: "Stone Mason",
+            maxPop: stoneMasonMaxPop,
+            buildCost: stoneMasonBuildCost,
+            outputResourceProduction: new List<IResourceProducer>() {
+                new SimpleResourceProducer(ResourceType.Stone, (int numOfWorkers) => { return numOfWorkers * stoneMasonProdPerPop; })
+                }
+            )
+        },
+
+        // Wood Cutter
+        { BuildingType.WoodCutter, new BuildingBlueprint(
+            buildingname: "Wood Cutter",
+            maxPop: woodCutterMaxPop,
+            buildCost: woodCutterBuildCost,
+            outputResourceProduction: new List<IResourceProducer>() {
+                new SimpleResourceProducer(ResourceType.Wood, (int numOfWorkers) => { return numOfWorkers * woodCutterProdPerPop; })
+                }
+            )
+        },
+
+        // Silver Mine
+        { BuildingType.SilverMine, new BuildingBlueprint(
+                buildingname: "Silver Mine",
+                maxPop: silverMineMaxPop,
+                buildCost: silverMineBuildCost,
+                outputResourceProduction: silverMineOutputResources
+                )
+        },
+
+        // Steel Smith
+        { BuildingType.SteelSmith, new BuildingBlueprint(
+                buildingname: "Steel Smith",
+                maxPop: steelBlacksmithMaxPop,
+                buildCost: steelBlacksmithBuildCost,
+                outputResourceProduction: steelBlacksmithOutputResources,
+                inputResourceProduction: steelBlacksmithInputResources
+            )
+        },
+
     };
-    public static IBuilding buildNewBank(int x, int y) {
-        return new SimpleBuilding(
-            BuildingType.Bank,
-            ResourceType.Gold, 
-            bankProdPerPop, 
-            bankMaxPop,
-            bankTile, 
-            new Vector2Int(x, y),
-            bankBuildCost);
-    }
-    public static IBuilding buildNewBank() {
-        return new PositionlessSimpleBuilding(
-            BuildingType.Bank,
-            ResourceType.Gold,
-            bankProdPerPop,
-            bankMaxPop,
-            bankTile,
-            bankBuildCost);
-    }
+}
 
-    #endregion
 
-    #region stone mason
-    public static TileBase stoneMasonTile;
-    public static readonly int stoneMasonProdPerPop = 1;
-    public static readonly int stoneMasonMaxPop = 6;
-    public static readonly HashSet<ResourceChange> stoneMasonBuildCost = new HashSet<ResourceChange>()
+public class BuildingBlueprint {
+    public readonly string buildingName;
+    
+    public readonly int maxPop;
+    public readonly List<ResourceChange> buildCost;
+
+    public readonly List<IResourceProducer> outputResourceProduction;
+    public readonly List<IResourceProducer> inputResourceCosts; // Note: despite intuition, this should always be a positive vale
+
+    public BuildingBlueprint(
+        string buildingname = "Un-named building",
+        int maxPop = 0,
+        List<ResourceChange> buildCost = null,
+        List<IResourceProducer> outputResourceProduction = null,
+        List<IResourceProducer> inputResourceProduction = null  // Note: despite intuition, this should always be a positive vale
+        )
     {
-        new ResourceChange(ResourceType.Gold, 150),
-        new ResourceChange(ResourceType.Wood, 50)
-    };
-    public static IBuilding buildNewStoneMason(int x, int y) {
-        return new SimpleBuilding(
-            BuildingType.StoneMason,
-            ResourceType.Stone,
-            stoneMasonProdPerPop,
-            stoneMasonMaxPop,
-            stoneMasonTile,
-            new Vector2Int(x, y),
-            stoneMasonBuildCost);
-    }
-    public static IBuilding buildNewStoneMason() {
-        return new PositionlessSimpleBuilding(
-            BuildingType.StoneMason,
-            ResourceType.Stone,
-            stoneMasonProdPerPop,
-            stoneMasonMaxPop,
-            stoneMasonTile,
-            stoneMasonBuildCost);
-    }
-    #endregion
+        this.buildingName = buildingname;
+        this.maxPop = maxPop;
 
-    #region wood cutter
-    public static TileBase woodCutterTile;
-    public static readonly int woodCutterProdPerPop = 3;
-    public static readonly int woodCutterMaxPop = 2;
-    public static readonly HashSet<ResourceChange> swoodCutterBuildCost = new HashSet<ResourceChange>() {
-        new ResourceChange(ResourceType.Gold, 75)
-    };
-    public static IBuilding buildNewWoodCutter(int x, int y) {
-        return new SimpleBuilding(
-            BuildingType.WoodCutter,
-            ResourceType.Wood, 
-            woodCutterProdPerPop, 
-            woodCutterMaxPop,
-            woodCutterTile, 
-            new Vector2Int(x, y),
-            swoodCutterBuildCost);
-    }
-    public static IBuilding buildNewWoodCutter()
-    {
-        return new PositionlessSimpleBuilding(
-            BuildingType.WoodCutter,
-            ResourceType.Wood, 
-            woodCutterProdPerPop, 
-            woodCutterMaxPop,
-            woodCutterTile, 
-            swoodCutterBuildCost);
-    }
-
-    #endregion
-
-
-    public static readonly List<BuildingType> allBuildings = new List<BuildingType>(3) {
-        BuildingType.Bank,
-        BuildingType.StoneMason,
-        BuildingType.WoodCutter,
-    };
-
-    public static string getName(BuildingType bt) {
-        switch(bt) {
-            case BuildingType.Bank:       return "Bank";
-            case BuildingType.StoneMason: return "Stone Mason";
-            case BuildingType.WoodCutter: return "Wood Cutter";
-                
-            case BuildingType.NONE: return "NONE";
-            default: return Enum.GetName(typeof(BuildingType), bt);
+        if (buildCost == null) {
+            this.buildCost = new List<ResourceChange>();
+            Debug.Log(buildingName);
+            throw new System.Exception();
+        } else {
+            this.buildCost = buildCost;
         }
+        
+        this.outputResourceProduction = (outputResourceProduction == null) ? new List<IResourceProducer>() : outputResourceProduction;
+        this.inputResourceCosts = (inputResourceProduction == null)   ? new List<IResourceProducer>() : inputResourceProduction;
     }
 
 }

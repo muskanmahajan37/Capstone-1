@@ -6,8 +6,18 @@ public enum ResourceType {
     Gold,
     Stone,
     Wood,
-    Food,
-    Iron,
 
+    Silver,
+    Food,
+    
+    Iron,
+    Coal,
+    Steel,
+
+    Sword,
+    Shield,
+    Armor,
+    
     NONE
 }
+

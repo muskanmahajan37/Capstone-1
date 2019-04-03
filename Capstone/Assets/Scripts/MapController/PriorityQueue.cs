@@ -462,7 +462,7 @@ public class MemoryBoundedPriorityQueue<TPriority, TValue> : PriorityQueueDemo.P
 public class AccordionPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<TPriority, TValue>
 {
     private int maxSize;
-    public AccordionPriorityQueue(int maxSize) : base(Comparer<TPriority>.Default) { this.maxSize = maxSize; }
+    public AccordionPriorityQueue(int maxSize) : base(maxSize) { this.maxSize = maxSize; }
 
     public new void Enqueue(TPriority priority, TValue value) {
         base.Enqueue(priority, value);
@@ -470,8 +470,25 @@ public class AccordionPriorityQueue<TPriority, TValue> : PriorityQueueDemo.Prior
     }
 }
 
+public class IDPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<int, QGameState>
+{
+    private int nextBound;
+    public int NextBount { get { return nextBound; } }
 
+    private int maxDepth;
+    public IDPriorityQueue(int maxDepth = 10) : base() {
+        this.maxDepth = maxDepth;
+        this.nextBound = int.MaxValue;
+    }
 
-
-
-
+    public new void Enqueue(int priority, QGameState value) {
+        if (priority <= maxDepth) {
+            // Don't explore any nodes with (f+g) larger than bound
+            base.Enqueue(priority, value);
+        } else {
+            // Protocol says the reccomended next bound should be the smallest number
+            // that is larger than the current maxDepth
+            this.nextBound = Mathf.Min(priority, this.nextBound);
+        }
+    }
+}

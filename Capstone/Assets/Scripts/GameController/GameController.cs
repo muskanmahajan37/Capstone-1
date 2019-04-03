@@ -81,7 +81,7 @@ public class GameController : MonoBehaviour
     }
 
     private void displayAllResourceCount() {
-        foreach (ResourceType rt in this.gameState.getResourceType()) {
+        foreach (ResourceType rt in this.gameState.getAllResourceTypes()) {
             this.resourceDisplay.updateResourceCount(rt, gameState.getStockpile(rt));
         }
     }
@@ -119,8 +119,8 @@ public class GameController : MonoBehaviour
         // IE: input, output and cost to build resources
 
         // Update the income per turn for the building
-        HashSet<ResourceType> allResources = newBuiding.outputResources();
-        allResources.UnionWith(newBuiding.inputResources());
+        List<ResourceType> allResources = newBuiding.outputResources();
+        allResources.AddRange(newBuiding.inputResources());
         foreach(ResourceType rt in allResources) {
             int newStockpile = this.gameState.getStockpile(rt);
             int newRPT = this.gameState.getPerTickChange(rt);

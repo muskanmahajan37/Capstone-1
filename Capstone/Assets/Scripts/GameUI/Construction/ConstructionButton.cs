@@ -26,7 +26,7 @@ public class ConstructionButton : MonoBehaviour {
         this.bt = bt;
 
         Text myText = this.transform.GetChild(0).GetComponent<Text>();
-        myText.text = BuildingFactory.getName(bt);
+        myText.text = BuildingFactory.allBluePrints[bt].buildingName;
     }
 
 
