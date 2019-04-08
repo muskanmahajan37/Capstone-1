@@ -19,5 +19,9 @@ public static class GameSetup {
     public static readonly string CONSTRUCTION_CONTROLLER_TAG = "ConstructionController";
 
 
+    public static readonly string HOME_SCREEN_CONTROLLER_TAG = "HomeScreenController";
+    public static readonly string STR_CAMPAIGN_TYPE = "campaign_type";
+    public static readonly string STR_AI_PERSONALITY_TYPE = "ai_personality_type";
+
     public static readonly float TICK_LENGHT_SEC = 2.0f; // 2 secconds = one in game tick
 }
