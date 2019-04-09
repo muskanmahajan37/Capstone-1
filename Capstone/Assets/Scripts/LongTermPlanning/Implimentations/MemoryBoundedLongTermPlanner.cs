@@ -13,7 +13,7 @@ public class MemoryBoundedLongTermPlanner : ALongTermPlanner {
     public void memoryBoundedLTP(BuildingGS initialGS,
                                  BuildingGS targetGS,
                                  Func<Stack<Work>, bool> callback,
-                                 int memoryBound = 200) {
+                                 int memoryBound = 2000) {
         /**
          * Find a path from the initialGS to the targetGS. The resultant path (translted into an ordered list of Work)
          * will be pumped into the provided callback once it's ready. 

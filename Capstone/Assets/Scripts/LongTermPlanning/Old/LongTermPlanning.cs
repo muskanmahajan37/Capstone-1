@@ -4,6 +4,8 @@ using UnityEngine;
 using PriorityQueueDemo;
 using System;
 
+
+/*
 public static class LongTermPlanning {
     
     private static int WAIT_TIME = 20;
@@ -86,7 +88,7 @@ public static class LongTermPlanning {
         return currentQE.costToGetHere;
     }
 
-    public static Queue<Work> plan(GameState initialGS, GameState targetGS) {
+    public static Queue<EWork> plan(GameState initialGS, GameState targetGS) {
 
         float startTime = Time.realtimeSinceStartup;
         QGameState currentQE = BuildPlan(initialGS, targetGS);
@@ -99,7 +101,7 @@ public static class LongTermPlanning {
         if (currentQE == null)
         {
             Debug.Log("No path found");
-            return new Queue<Work>();
+            return new Queue<EWork>();
         }
 
         foreach (var kvp in currentQE.gameState.resources) {
@@ -110,7 +112,7 @@ public static class LongTermPlanning {
         Debug.Log("Total Time: " + currentQE.costToGetHere);
 
         // TODO: using double ended queues may be more efficent
-        List<Work> tempList = new List<Work>();
+        List<EWork> tempList = new List<EWork>();
 
         while (currentQE != null) {
             tempList.Add(currentQE.transitionWork);
@@ -118,7 +120,7 @@ public static class LongTermPlanning {
         }
 
         tempList.Reverse();
-        Queue<Work> result = new Queue<Work>(tempList);
+        Queue<EWork> result = new Queue<EWork>(tempList);
         return result;
 
     }
@@ -133,7 +135,7 @@ public static class LongTermPlanning {
         Dictionary<GameState, int> bestCostToGetHere = new Dictionary<GameState, int>();
 
 
-        QGameState startQE = new QGameState(initialGS, null, Work.EMPTY, 0);
+        QGameState startQE = new QGameState(initialGS, null, EWork.EMPTY, 0);
         int heuristic = compareGameState(initialGS, targetGS);
         priorityQueue.Enqueue(heuristic, startQE);
 
@@ -195,13 +197,13 @@ public static class LongTermPlanning {
         // The thing that gets put onto the priority queue           
 
         public QGameState parent;
-        public Work transitionWork; // transitionWork represents the job done to move from parent to currentGS
+        public EWork transitionWork; // transitionWork represents the job done to move from parent to currentGS
                                     // NOTE: This will be EMPTY if parent is null (ie if this QE is the root qe)
 
         public GameState gameState;
         public int costToGetHere;
 
-        public QGameState(GameState gs, QGameState parent, Work transitionWork, int costToGetHere) {
+        public QGameState(GameState gs, QGameState parent, EWork transitionWork, int costToGetHere) {
             this.gameState = gs;
             this.parent = parent;
             this.transitionWork = transitionWork;
@@ -216,7 +218,7 @@ public static class LongTermPlanning {
     private static QGameState waitTransition(QGameState qe, int time) {
         GameState endGS = waitGameState(qe.gameState, time);
         int timeCost = qe.costToGetHere + time;
-        return new QGameState(endGS, qe, Work.Wait, timeCost);
+        return new QGameState(endGS, qe, EWork.Wait, timeCost);
     }
 
     private static GameState waitGameState(GameState gs, int time) {
@@ -251,7 +253,7 @@ public static class LongTermPlanning {
         newGameState.resources["gold"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.BuyWorkerBank, timeCost);
+        return new QGameState(newGameState, qe, EWork.BuyWorkerBank, timeCost);
 
     }
 
@@ -268,7 +270,7 @@ public static class LongTermPlanning {
         newGameState.resources["stone"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.BuyWorkerStoneMason, timeCost);
+        return new QGameState(newGameState, qe, EWork.BuyWorkerStoneMason, timeCost);
 
     }
     
@@ -285,11 +287,8 @@ public static class LongTermPlanning {
         newGameState.resources["wood"].addWorkers(1);
 
         int timeCost = qe.costToGetHere + workerBuildTime;
-        return new QGameState(newGameState, qe, Work.BuyWorkerWoodCutter, timeCost);
+        return new QGameState(newGameState, qe, EWork.BuyWorkerWoodCutter, timeCost);
 
     }
 }
-
-
-
-
+*/

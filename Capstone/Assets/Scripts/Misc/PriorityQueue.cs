@@ -165,7 +165,7 @@ namespace PriorityQueueDemo
         /// </summary>
         /// <param name="priority">element priority</param>
         /// <param name="value">element value</param>
-        public void Enqueue(TPriority priority, TValue value)
+        public virtual void Enqueue(TPriority priority, TValue value)
         {
             Insert(priority, value);
         }
@@ -433,7 +433,7 @@ namespace PriorityQueueDemo
 
         public void removeBottomHalf() {
             int halfIndex = _baseHeap.Count / 2;
-            this._baseHeap.RemoveRange(halfIndex, halfIndex);
+            this._baseHeap.RemoveRange(halfIndex, halfIndex); // Looks weird, but it's correct
         }
 
         public void removeLast() {
@@ -442,53 +442,51 @@ namespace PriorityQueueDemo
 
         #endregion
     }
-}
 
 
-public class MemoryBoundedPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<TPriority, TValue> {
+    public class MemoryBoundedPriorityQueue<TPriority, TValue> : PriorityQueue<TPriority, TValue> {
 
-    private int maxSize;
+        private int maxSize;
 
-    public MemoryBoundedPriorityQueue(int maxSize) : base (maxSize) { this.maxSize = maxSize; }
+        public MemoryBoundedPriorityQueue(int maxSize) : base(maxSize) { this.maxSize = maxSize; }
 
 
-    public new void Enqueue(TPriority priority, TValue value) {
-        base.Enqueue(priority, value);
-        if (_baseHeap.Count > maxSize) { base.removeLast(); }
-    }
-
-}
-
-public class AccordionPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<TPriority, TValue>
-{
-    private int maxSize;
-    public AccordionPriorityQueue(int maxSize) : base(maxSize) { this.maxSize = maxSize; }
-
-    public new void Enqueue(TPriority priority, TValue value) {
-        base.Enqueue(priority, value);
-        if (_baseHeap.Count > maxSize) { base.removeBottomHalf(); }
-    }
-}
-
-public class IDPriorityQueue<TPriority, TValue> : PriorityQueueDemo.PriorityQueue<int, QGameState>
-{
-    private int nextBound;
-    public int NextBount { get { return nextBound; } }
-
-    private int maxDepth;
-    public IDPriorityQueue(int maxDepth = 10) : base() {
-        this.maxDepth = maxDepth;
-        this.nextBound = int.MaxValue;
-    }
-
-    public new void Enqueue(int priority, QGameState value) {
-        if (priority <= maxDepth) {
-            // Don't explore any nodes with (f+g) larger than bound
+        public override void Enqueue(TPriority priority, TValue value) {
             base.Enqueue(priority, value);
-        } else {
-            // Protocol says the reccomended next bound should be the smallest number
-            // that is larger than the current maxDepth
-            this.nextBound = Mathf.Min(priority, this.nextBound);
+            if (_baseHeap.Count > maxSize) { base.removeLast(); }
+        }
+
+    }
+
+    public class AccordionPriorityQueue<TPriority, TValue> : PriorityQueue<TPriority, TValue> {
+        private int maxSize;
+        public AccordionPriorityQueue(int maxSize) : base(maxSize) { this.maxSize = maxSize; }
+
+        public override void Enqueue(TPriority priority, TValue value) {
+            base.Enqueue(priority, value);
+            if (_baseHeap.Count > maxSize) { base.removeBottomHalf(); }
+        }
+    }
+
+    public class IDPriorityQueue<TPriority, TValue> : PriorityQueue<int, QGameState> {
+        private int nextBound;
+        public int NextBount { get { return nextBound; } }
+
+        private int maxDepth;
+        public IDPriorityQueue(int maxDepth = 10) : base() {
+            this.maxDepth = maxDepth;
+            this.nextBound = int.MaxValue;
+        }
+
+        public override void Enqueue(int priority, QGameState value) {
+            if (priority <= maxDepth) {
+                // Don't explore any nodes with (f+g) larger than bound
+                base.Enqueue(priority, value);
+            } else {
+                // Protocol says the reccomended next bound should be the smallest number
+                // that is larger than the current maxDepth
+                this.nextBound = Mathf.Min(priority, this.nextBound);
+            }
         }
     }
 }

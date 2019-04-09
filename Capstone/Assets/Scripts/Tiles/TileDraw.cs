@@ -15,6 +15,7 @@ public class TileDraw : MonoBehaviour {
     public Tilemap peopleTileMap;  // Note, currently dwarfs draw themselves so this should not really be used much
 
     public Tilemap buildingTileMap;
+    public TileBase constructionBase;
 
     #region specific drawing
 
@@ -59,6 +60,11 @@ public class TileDraw : MonoBehaviour {
     public void drawBuilding(IBuilding b) {
         Vector3Int drawPos = new Vector3Int(b.position().x, b.position().y, GameSetup.BUILDING_LAYER);
         buildingTileMap.SetTile(drawPos, b.buildingIcon());
+    }
+
+    public void construction(Vector2Int pos) {
+        Vector3Int drawPos = new Vector3Int(pos.x, pos.y, GameSetup.BUILDING_LAYER);
+        buildingTileMap.SetTile(drawPos, constructionBase);
     }
     #endregion
 

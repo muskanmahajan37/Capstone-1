@@ -96,6 +96,10 @@ public class MapController : MonoBehaviour {
         tileDraw.drawBuilding(newBuilding);
     }
 
+    public void construction(Vector2Int pos) {
+        tileDraw.construction(pos);
+    }
+
     #endregion
 
     #region Direct Edge Modifiers

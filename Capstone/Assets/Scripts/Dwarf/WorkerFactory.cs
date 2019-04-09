@@ -7,7 +7,7 @@ public static class WorkerFactory
 
     public static readonly IEnumerable<ResourceChange> WORKER_COST = new List<ResourceChange>()
     {
-        new ResourceChange(ResourceType.Gold, 100)
+        new ResourceChange(ResourceType.Gold, 10)
     };
 
 }

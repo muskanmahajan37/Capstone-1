@@ -10,7 +10,7 @@ public static class GameSetup {
     public static readonly int BUILDING_LAYER = 15;
     public static readonly int CHARACTER_LAYER = 10;
 
-    public static readonly float TICK_RATE = 0.2f;
+    public static readonly float TICK_LENGHT_SEC = 0.01f; // 2 secconds = one in game tick
 
     public static readonly int WORKER_GOLD_COST = 30;
 
@@ -19,5 +19,4 @@ public static class GameSetup {
     public static readonly string CONSTRUCTION_CONTROLLER_TAG = "ConstructionController";
 
 
-    public static readonly float TICK_LENGHT_SEC = 2.0f; // 2 secconds = one in game tick
 }

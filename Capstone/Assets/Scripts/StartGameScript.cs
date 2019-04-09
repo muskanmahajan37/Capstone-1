@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
+/*
 public class StartGameScript : MonoBehaviour
 {
     private static readonly long fps = 60;
@@ -26,7 +27,7 @@ public class StartGameScript : MonoBehaviour
     private long[] workerBuildTimes;
     private String[] workerBuildType;
 
-    private Queue<Work> workQAI;
+    private Queue<EWork> workQAI;
 
     public Text mainTextDisplay;
     public Text otherTextDisplay;
@@ -123,10 +124,10 @@ public class StartGameScript : MonoBehaviour
             }
             if (gameTime % ACTION_INTERVAL == 0)
             {
-                Work currentWork = workQAI.Dequeue();
-                if (currentWork == Work.EMPTY)
+                EWork currentWork = workQAI.Dequeue();
+                if (currentWork == EWork.EMPTY)
                 { }
-                else if (currentWork == Work.NewGoldMiner)
+                else if (currentWork == EWork.NewGoldMiner)
                 {
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI])) {
                         workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime * fps;
@@ -135,7 +136,7 @@ public class StartGameScript : MonoBehaviour
                         //Debug.Log("AI's gold workers will be increased by 1. Current: " + gameStates[indexAI].resources["gold"].workerCount);
                     }
                 }
-                else if (currentWork == Work.NewStoneMiner)
+                else if (currentWork == EWork.NewStoneMiner)
                 {
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI]))
                     {
@@ -145,7 +146,7 @@ public class StartGameScript : MonoBehaviour
                         //Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].workerCount);
                     }
                 }
-                else if (currentWork == Work.NewWoodsman)
+                else if (currentWork == EWork.NewWoodsman)
                 {
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI]))
                     {
@@ -156,7 +157,7 @@ public class StartGameScript : MonoBehaviour
                     }
                 }
 
-                else if (currentWork == Work.Wait)
+                else if (currentWork == EWork.Wait)
                 { }
             }
         }
@@ -203,3 +204,4 @@ public class StartGameScript : MonoBehaviour
 
 
 }
+*/
