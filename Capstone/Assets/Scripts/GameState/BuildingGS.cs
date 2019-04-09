@@ -17,12 +17,15 @@ public class BuildingGS
     protected Dictionary<ResourceType, int> resourceChangePerTick;  // Short hand for what all the buildings are producing
     protected Dictionary<BuildingType, Queue<IBuilding>> openSpots; // Any building that is in this dictionary should have at least 1 open slot
 
+    protected ResourceMap resourceMap; // All of the resources for this gamestate, things like fertil land or coal outcroppings
+
     // TODO: Remove this constructor
     public BuildingGS() {
         this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
         this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
+        this.resourceMap = new ResourceMap();
     }
 
     public BuildingGS(IEnumerable<ResourceChange> startingResources) {
@@ -30,6 +33,7 @@ public class BuildingGS
         this.resourceStockpile = new Dictionary<ResourceType, int>();
         this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
+        this.resourceMap = new ResourceMap();
 
         foreach (ResourceChange rc in startingResources) {
             this.resourceStockpile.Add(rc.resourceType, rc.change);
@@ -45,10 +49,11 @@ public class BuildingGS
         this.resourceStockpile = new Dictionary<ResourceType, int>();
         this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
+        this.resourceMap = new ResourceMap();
 
 
         // Buildings
-        foreach(KeyValuePair<BuildingType, List<IBuilding>> kvp in other.buildings) {
+        foreach (KeyValuePair<BuildingType, List<IBuilding>> kvp in other.buildings) {
             foreach(IBuilding otherBuilding in kvp.Value) {
                 // Clone and add every building to this game state
                 // TODO: Do we have to clone? If we have units assigned then probably yes... 
@@ -77,26 +82,69 @@ public class BuildingGS
         return 0;
     }
 
-    public IEnumerable<ResourceType> getAllResourceTypes() {
-        return this.resourceStockpile.Keys;
+    public HashSet<ResourceType> getCPTResourceTypes() {
+        return new HashSet<ResourceType>(this.resourceChangePerTick.Keys);
     }
 
-    public bool anyOpenSlots(BuildingType bt) {
-        if (this.openSpots.ContainsKey(bt)) { return this.openSpots[bt].Count >= 0; }
-        return false;
+    public HashSet<ResourceType> getStockpileResourceTypes() {
+        return new HashSet<ResourceType>(this.resourceStockpile.Keys);
+    }
+
+    public HashSet<ResourceType> getAllResourceTypes() {
+        HashSet<ResourceType> result = getStockpileResourceTypes();
+        result.UnionWith(getCPTResourceTypes());
+        return result;
+    }
+
+
+    public HashSet<ResourceType> slotsForIncome() {
+        // Returns every resource we are/ can currently make if we had more workers
+        HashSet<ResourceType> result = new HashSet<ResourceType>(this.resourceChangePerTick.Keys);
+        foreach (IBuilding openBuildings in this.getOpenSlotBuildings()) {
+            foreach (ResourceType rt in openBuildings.outputResources()) {
+                result.Add(rt);
+            }
+        }
+        return result;
+    }
+
+    private IEnumerable<IBuilding> getOpenSlotBuildings() {
+        List<IBuilding> result = new List<IBuilding>();
+        foreach (KeyValuePair<BuildingType, Queue<IBuilding>> kvp in this.openSpots) {
+            if (this.anyOpenSlots(kvp.Key)) {
+                result.Add(kvp.Value.Peek());
+            }
+        }
+        return result;
     }
 
     public IEnumerable<BuildingType> getOpenSlots() {
         List<BuildingType> result = new List<BuildingType>(this.openSpots.Count);
         foreach(KeyValuePair<BuildingType, Queue<IBuilding>> kvp in this.openSpots) {
-            if (kvp.Value.Count > 0) {
-                // If the open spots queue actually has buildings in it that need to be filled
-                // Add the building type to the result. 
+            if (this.anyOpenSlots(kvp.Key)) {
                 result.Add(kvp.Key);
             }
-            // Else, the key exists for that building type, but that doesn't guarentee that there are actually any spots.
         }
         return result;
+    }
+
+    public bool anyOpenSlots(BuildingType bt) {
+        return (this.getAnyOpenBuilding(bt) != null);
+    }
+
+    public IBuilding getAnyOpenBuilding(BuildingType bt) {
+        if (!this.openSpots.ContainsKey(bt)) { return null; } // No key, no slots
+
+        while (this.openSpots[bt].Count > 0) { // Empty queue => no slots
+            IBuilding possibleBuild = this.openSpots[bt].Peek();
+            if (possibleBuild.openWorkerSlots() <= 0) {
+                // If a building is in here with no slots remove it
+                this.openSpots[bt].Dequeue();
+            } else {
+                return possibleBuild;
+            }
+        }
+        return null;
     }
     #endregion
 
@@ -134,7 +182,7 @@ public class BuildingGS
         return true;
     }
 
-    public bool canBuyBuilding(BuildingType bt) {
+    public bool canAffordBuilding(BuildingType bt) {
         // Check initial build costs
         foreach (ResourceChange rc in BuildingFactory.allBluePrints[bt].buildCost) {
             if (!this.resourceStockpile.ContainsKey(rc.resourceType) ||
@@ -144,13 +192,18 @@ public class BuildingGS
                 return false;
             }
         }
-        
         return true;
     }
 
     public bool canBuyBuilding(IBuilding possibleBuilding) {
         // TODO: in the future, buildings may cost differently depending on where they're built etc.
-        return canBuyBuilding(possibleBuilding.getBuildingType());
+        bool result = canAffordBuilding(possibleBuilding.getBuildingType());
+        PositionDependentBuilding posBuilding = possibleBuilding as PositionDependentBuilding;
+        if (posBuilding != null) {
+            // Can the provided building be built in this game state? 
+            result &= posBuilding.canBuild(this);
+        }
+        return result;
     }
 
     public void buyBuilding(IBuilding newBuilding) {
@@ -162,7 +215,6 @@ public class BuildingGS
 
         // Then add the building and it's resource per tick count to this game state
         this.forceAddBuilding(newBuilding);
-        
     }
 
     public void forceAddBuilding(IBuilding newBuilding) {
@@ -222,7 +274,7 @@ public class BuildingGS
         foreach (ResourceChange rc in targetBuilding.changePerTick())
             { this.resourceChangePerTick[rc.resourceType] += rc.change; }
     }
-
+    
     public void unassignWorker(IBuilding targetBuilding) {
         foreach (ResourceChange rc in targetBuilding.changePerTick())
         { this.resourceChangePerTick[rc.resourceType] -= rc.change; }
@@ -265,7 +317,7 @@ public class BuildingGS
             // Update the rpt
             assignWorker(b);
 
-            if (b.openWorkerSlots() == 0) {
+            if (b.openWorkerSlots() <= 0) {
                 // If we've filled the building then remove it
                 this.openSpots[bt].Dequeue();
             }
@@ -314,10 +366,27 @@ public class BuildingGS
         // NOTE: This should only ever be used for testing reasons
         this.addToStockpile(new ResourceChange(rt, newCount)); 
     }
-    
+
 
     #endregion
-    
+
+    #region Modifying Resource Nodes
+
+    public List<IResourceNode> getResourceNodes(Vector2Int pos) {
+        // All IResourceNode objects at the provieded tile
+        return this.resourceMap.getNodes(pos);
+    }
+    public List<IResourceNode> getResourceNodes(Vector2Int pos, ResourceType rt) {
+        // All IResourceNode objects related to the provided type at the provided tile
+        return this.resourceMap.getNodes(pos, rt);
+    }
+
+    public void addResourceNode(IResourceNode newNode, Vector2Int pos) {
+        this.resourceMap.addNode(newNode, pos);
+    }
+
+    #endregion
+
     public override int GetHashCode() {
         // Two game States are equal if they have:
         // - the same stockpiles
@@ -378,7 +447,8 @@ public class BuildingGS
 }
 
 
-// TODO: This might be broken in the long term planner
+// TODO: This might be broken in the long term planner 
+//       later notes: Not sure what might be broken except possibly the clone functions returning the non-roundable stuff
 public class RoundableBuildingGameState : BuildingGS {
     protected int percision = 4;
 
@@ -394,7 +464,7 @@ public class RoundableBuildingGameState : BuildingGS {
         // Two game States are equal if they have:
         // - the same stockpiles
         // - the same income per tick
-        
+
         // TODO: Consider number of buildings an important field
         // TODO: Consider adding "free-land remaining" to this hash
         int hash = 17;

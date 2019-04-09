@@ -138,6 +138,7 @@ public static class BuildingFactory {
             buildingname: "Bank",
             maxPop: bankMaxPop,
             buildCost: bankBuildCost,
+            timeToBuild: 3,
             outputResourceProduction: new List<IResourceProducer>() {
                 new SimpleResourceProducer(ResourceType.Gold, (int numOfWorkers) => { return numOfWorkers * bankProdPerPop; })
                 }
@@ -149,6 +150,7 @@ public static class BuildingFactory {
             buildingname: "Stone Mason",
             maxPop: stoneMasonMaxPop,
             buildCost: stoneMasonBuildCost,
+            timeToBuild: 10,
             outputResourceProduction: new List<IResourceProducer>() {
                 new SimpleResourceProducer(ResourceType.Stone, (int numOfWorkers) => { return numOfWorkers * stoneMasonProdPerPop; })
                 }
@@ -160,6 +162,7 @@ public static class BuildingFactory {
             buildingname: "Wood Cutter",
             maxPop: woodCutterMaxPop,
             buildCost: woodCutterBuildCost,
+            timeToBuild: 15,
             outputResourceProduction: new List<IResourceProducer>() {
                 new SimpleResourceProducer(ResourceType.Wood, (int numOfWorkers) => { return numOfWorkers * woodCutterProdPerPop; })
                 }
@@ -168,20 +171,22 @@ public static class BuildingFactory {
 
         // Silver Mine
         { BuildingType.SilverMine, new BuildingBlueprint(
-                buildingname: "Silver Mine",
-                maxPop: silverMineMaxPop,
-                buildCost: silverMineBuildCost,
-                outputResourceProduction: silverMineOutputResources
-                )
+            buildingname: "Silver Mine",
+            maxPop: silverMineMaxPop,
+            buildCost: silverMineBuildCost,
+            timeToBuild: 30,
+            outputResourceProduction: silverMineOutputResources
+            )
         },
 
         // Steel Smith
         { BuildingType.SteelSmith, new BuildingBlueprint(
-                buildingname: "Steel Smith",
-                maxPop: steelBlacksmithMaxPop,
-                buildCost: steelBlacksmithBuildCost,
-                outputResourceProduction: steelBlacksmithOutputResources,
-                inputResourceProduction: steelBlacksmithInputResources
+            buildingname: "Steel Smith",
+            maxPop: steelBlacksmithMaxPop,
+            buildCost: steelBlacksmithBuildCost,
+            timeToBuild: 5,
+            outputResourceProduction: steelBlacksmithOutputResources,
+            inputResourceProduction: steelBlacksmithInputResources
             )
         },
 
@@ -194,6 +199,7 @@ public class BuildingBlueprint {
     
     public readonly int maxPop;
     public readonly List<ResourceChange> buildCost;
+    public readonly int timeToBuild;
 
     public readonly List<IResourceProducer> outputResourceProduction;
     public readonly List<IResourceProducer> inputResourceCosts; // Note: despite intuition, this should always be a positive vale
@@ -202,12 +208,14 @@ public class BuildingBlueprint {
         string buildingname = "Un-named building",
         int maxPop = 0,
         List<ResourceChange> buildCost = null,
+        int timeToBuild = 0,
         List<IResourceProducer> outputResourceProduction = null,
         List<IResourceProducer> inputResourceProduction = null  // Note: despite intuition, this should always be a positive vale
         )
     {
         this.buildingName = buildingname;
         this.maxPop = maxPop;
+        this.timeToBuild = timeToBuild;
 
         if (buildCost == null) {
             this.buildCost = new List<ResourceChange>();

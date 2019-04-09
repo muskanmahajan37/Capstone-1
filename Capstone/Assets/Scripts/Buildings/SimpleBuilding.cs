@@ -58,6 +58,8 @@ public interface IBuilding  {
     int currentWorkers();
     int openWorkerSlots();
 
+    int timeToBuild();
+
     // Modifiers
     bool addWorker();
     bool removeWorker();
@@ -177,6 +179,7 @@ public class SimpleBuilding : IBuilding {
     public BuildingType getBuildingType() { return this.bt; }
     public int currentWorkers() { return this.currentPop; }
     public int openWorkerSlots() { return this.maxPop - this.currentPop; }
+    public int timeToBuild() { return BuildingFactory.allBluePrints[this.bt].timeToBuild; }
 
     #endregion
 

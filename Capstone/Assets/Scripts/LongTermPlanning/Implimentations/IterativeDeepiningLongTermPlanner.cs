@@ -23,7 +23,7 @@ public class IterativeDeepiningLongTermPlanner : ALongTermPlanner
     public void ID_LTP(BuildingGS initialGS,
                        BuildingGS targetGS,
                        Func<Stack<Work>, bool> callback,
-                       int initialDepth = 10) {
+                       int initialDepth = 100) {
         /**
          * Find a path from the initialGS to the targetGS. The resultant path (translted into an ordered list of Work)
          * will be pumped into the provided callback once it's ready. 
@@ -43,9 +43,10 @@ public class IterativeDeepiningLongTermPlanner : ALongTermPlanner
         if (engineOutput == null) {
             // If no path was found, increase the depth and try again
             ID_LTP(initialGS, targetGS, callback, ID_Queue.NextBount);
+        } else {
+            // Otherwise, we have a valid path so process as normal
+            base.processResult(engineOutput);
         }
-        // Otherwise, we have a valid path so process as normal
-        base.processResult(engineOutput);
         return true;
     }
 }

@@ -69,7 +69,6 @@ public class GameController : MonoBehaviour
             tick();
             lastGameTick = Time.time;
         }
-
     }
 
     private void tick() {
@@ -93,16 +92,34 @@ public class GameController : MonoBehaviour
         return null;
     }
     
+    public IBuilding getAnyOpenBuilding(BuildingType bt) {
+        // Returns an instance of the provided BT with a free worker slot
+        // If no such building exists, null is returned
+        return this.gameState.getAnyOpenBuilding(bt);
+    }
 
     public bool canBuildBuilding(BuildingType bt, int x, int y) {
-        return this.gameState.canBuyBuilding(bt) &&
+        return this.gameState.canAffordBuilding(bt) &&
                this.mapController.isWalkable(x, y);
     }
 
+    public void startBuildBuilding(IBuilding newBuilding) {
+        // Start the construction process of this new building
+        StartCoroutine(waitForConstruction(newBuilding));
+    }
+
+    private IEnumerator waitForConstruction(IBuilding newBuilding) {
+        // First, mark the target tile as occupied
+        mapController.construction(newBuilding.position());
+        // Wait for the designated time
+        Debug.Log(newBuilding.timeToBuild());
+        yield return new WaitForSeconds(newBuilding.timeToBuild() * GameSetup.TICK_LENGHT_SEC);
+        forceBuildBuilding(newBuilding);
+    }
+    
     public void forceBuildBuilding(IBuilding newBuilding) {
         // Reccord the position of the building
-        Tile buildingPos = new Tile(newBuilding.position());
-        this.buildingPositions[buildingPos] = newBuilding;
+        occupyBuildingSpace(newBuilding);
 
         // Give the building to the resource manager logic
         this.gameState.buyBuilding(newBuilding);
@@ -133,6 +150,13 @@ public class GameController : MonoBehaviour
             int newStockpile = this.gameState.getStockpile(rc.resourceType);
             resourceDisplay.updateResourceCount(rc.resourceType, newStockpile);
          }
+    }
+
+
+    private void occupyBuildingSpace(IBuilding b) {
+        // Store the provided building in this internal tile -> building map
+        Tile buildingPos = new Tile(b.position());
+        this.buildingPositions[buildingPos] = b;
     }
 
     #endregion

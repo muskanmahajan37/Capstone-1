@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Diagnostics;
 
 
 public abstract class ALongTermPlanner : MonoBehaviour {
@@ -19,17 +20,25 @@ public abstract class ALongTermPlanner : MonoBehaviour {
     
     protected bool processResult(QGameState engineOutput) {
         // Process the output result from the LTPEngine
+        UnityEngine.Debug.Log("actual EndTime: " + Stopwatch.GetTimestamp());
+        UnityEngine.Debug.Log("IG time: " + engineOutput.costToGetHere);
+        foreach (ResourceType rt in engineOutput.gameState.getAllResourceTypes()) {
+            UnityEngine.Debug.Log(rt + "Stockpile: " + engineOutput.gameState.getStockpile(rt));
+            UnityEngine.Debug.Log(rt + "tickrate: " + engineOutput.gameState.getPerTickChange(rt));
+        }
         if (engineOutput == null) {
-            Debug.Log("No path found");
+            UnityEngine.Debug.Log("No path found");
             this.result = new Stack<Work>();
         }
 
         Stack<Work> result = new Stack<Work>();
-        result.Push(Work.Wait); // TODO: there's some bug that causes the Engine to end one step short :( 
+        Work finalWait = new Work(EWork.Wait, BuildingType.NONE, 10);
+        result.Push(finalWait); // TODO: there's some bug that causes the Engine to end one step short :( 
         while (engineOutput != null) {
             // Note, the finalResult value should be the targetGS. IE: We're looping backwards from
             // finish to start. So last element into the list == the first unit of work that
             // should be done
+            //UnityEngine.Debug.Log(engineOutput.transitionWork.buildingType + " " + engineOutput.transitionWork.workType);
             result.Push(engineOutput.transitionWork);
             engineOutput = engineOutput.parent;
         }

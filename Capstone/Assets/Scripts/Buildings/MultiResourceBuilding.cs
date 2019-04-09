@@ -8,14 +8,16 @@ public class MultiResourceBuilding : IBuilding {
      * To represent a building that takes in or ouputs multiple types of resources
      */
     
-    private readonly BuildingType bt;    
-    private Vector2Int pos;
-    private int currentWorkerCount;
+    protected readonly BuildingType bt;
+    protected Vector2Int pos;
+    protected int currentWorkerCount;
 
-    private BuildingBlueprint myBlueprint { get { return BuildingFactory.allBluePrints[this.bt]; } }
-    private int maxWorkerCount { get { return myBlueprint.maxPop; } }
-    private List<IResourceProducer> outputProduction { get { return myBlueprint.outputResourceProduction; } }
-    private List<IResourceProducer> inputCosts { get { return myBlueprint.inputResourceCosts; } }
+    protected BuildingBlueprint myBlueprint { get { return BuildingFactory.allBluePrints[this.bt]; } }
+    protected int maxWorkerCount { get { return myBlueprint.maxPop; } }
+    protected List<IResourceProducer> outputProduction { get { return myBlueprint.outputResourceProduction; } }
+    protected List<IResourceProducer> inputCosts { get { return myBlueprint.inputResourceCosts; } }
+
+    protected int buildTime { get { return myBlueprint.timeToBuild; } }
 
     #region Constructors
 
@@ -40,11 +42,7 @@ public class MultiResourceBuilding : IBuilding {
 
     #endregion
 
-
-    public List<ResourceChange> costToBuild() {
-        return BuildingFactory.allBluePrints[this.bt].buildCost;
-    }
-
+    #region Input/ Output
     public List<ResourceType> outputResources() {
         List<ResourceType> result = new List<ResourceType>();
         foreach (IResourceProducer producer in outputProduction) {
@@ -77,7 +75,9 @@ public class MultiResourceBuilding : IBuilding {
         }
         return result;
     }
+    #endregion
 
+    #region Simulations
     public List<ResourceChange> simulate(int time) {
         // NOTE: normally input resources are represented as a positive value, but here they are returned negative
 
@@ -95,23 +95,23 @@ public class MultiResourceBuilding : IBuilding {
     public List<ResourceChange> changePerTick() {
         // NOTE: normally input resources are represented as a positive value, but here they are returned negative
 
-        List<ResourceChange> result = new List<ResourceChange>();
         // Calculate outputs
-        foreach (IResourceProducer producer in outputProduction) {
-            ResourceChange prodSimulate = producer.simulate(this.currentWorkerCount);
-            result.Add(prodSimulate);
-        }
+        List<ResourceChange> result = this.outputResourceProduction();
 
         // Calculate inputs
-        foreach (IResourceProducer costs in inputCosts) {
+        foreach (ResourceChange cost in inputResourceCost()) {
             // Remember, Blueprint.inputResourceCosts should always be positive despite intuition
-            ResourceChange costSimulate = costs.simulate(this.currentWorkerCount);
-            costSimulate.change = -1 * costSimulate.change;
-            result.Add(costSimulate);
+            cost.change *= -1;
+            result.Add(cost);
         }
         return result;
     }
+    #endregion
 
+    #region Accessors
+    public List<ResourceChange> costToBuild() {
+        return BuildingFactory.allBluePrints[this.bt].buildCost;
+    }
 
     public TileBase buildingIcon() { return BuildingFactory.getIcon(this.bt); }
     public Vector2Int position() { return this.pos; }
@@ -119,7 +119,10 @@ public class MultiResourceBuilding : IBuilding {
     public int currentWorkers() { return this.currentWorkerCount; }
     public int openWorkerSlots() { return this.maxWorkerCount - this.currentWorkerCount; }
 
+    public int timeToBuild() { return this.buildTime; }
+    #endregion
 
+    #region Workers
     public bool addWorker() {
         if (this.maxWorkerCount <= this.currentWorkerCount) { return false; }
         this.currentWorkerCount++;
@@ -131,4 +134,5 @@ public class MultiResourceBuilding : IBuilding {
         this.currentWorkerCount--;
         return true;
     }
+    #endregion
 }

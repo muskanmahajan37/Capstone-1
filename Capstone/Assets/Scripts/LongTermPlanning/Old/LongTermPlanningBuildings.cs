@@ -4,6 +4,8 @@ using UnityEngine;
 using PriorityQueueDemo;
 using System;
 
+// TODO: do we need this? 
+/*
 public static class LongTermPlanningBuildings {
 
     public static int planTotalIGTime(BuildingGS initialGS, BuildingGS targetGS) {
@@ -13,18 +15,12 @@ public static class LongTermPlanningBuildings {
         }
 
         int totalCost = currentQE.costToGetHere;
-        /*
-        while (currentQE != null) {
-            Debug.Log(Enum.GetName(typeof(Work), currentQE.transitionWork));
-            currentQE = currentQE.parent;
-        }
-        */
 
         return totalCost;
     }
 
 
-    public static Queue<Work> plan(BuildingGS initialGS, BuildingGS targetGS) {
+    public static Queue<EWork> plan(BuildingGS initialGS, BuildingGS targetGS) {
 
         float startTime = Time.realtimeSinceStartup;
         QGameState currentQE = BuildPlan(initialGS, targetGS);
@@ -37,7 +33,7 @@ public static class LongTermPlanningBuildings {
         if (currentQE == null)
         {
             Debug.Log("No path found");
-            return new Queue<Work>();
+            return new Queue<EWork>();
         }
 
         foreach (ResourceType rt in currentQE.gameState.getAllResourceTypes()) {
@@ -48,7 +44,7 @@ public static class LongTermPlanningBuildings {
         Debug.Log("Total Time: " + currentQE.costToGetHere);
 
         // TODO: using double ended queues may be more efficent
-        List<Work> tempList = new List<Work>();
+        List<EWork> tempList = new List<EWork>();
 
         while (currentQE != null) {
             tempList.Add(currentQE.transitionWork);
@@ -56,7 +52,7 @@ public static class LongTermPlanningBuildings {
         }
 
         tempList.Reverse();
-        Queue<Work> result = new Queue<Work>(tempList);
+        Queue<EWork> result = new Queue<EWork>(tempList);
         return result;
 
     }
@@ -68,7 +64,7 @@ public static class LongTermPlanningBuildings {
         Dictionary<BuildingGS, int> bestCostToGetHere = new Dictionary<BuildingGS, int>();
 
         // Add initial state to queue
-        QGameState startQE = new QGameState(initialGS, null, Work.EMPTY, 0);
+        QGameState startQE = new QGameState(initialGS, null, EWork.EMPTY, 0);
         int heuristic = LTPHelper.compareGameState(initialGS, targetGS);
         priorityQueue.Enqueue(heuristic, startQE);
         
@@ -118,4 +114,4 @@ public static class LongTermPlanningBuildings {
     
 
     
-}
+}*/

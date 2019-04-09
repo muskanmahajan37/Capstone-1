@@ -6,7 +6,7 @@ using System;
 public class TestLTPMonoBehavior : MonoBehaviour
 {
 
-    public MemoryBoundedLongTermPlanner ltp;
+    public ALongTermPlanner ltp;
 
     public void testLTP() {
 
@@ -29,10 +29,6 @@ public class TestLTPMonoBehavior : MonoBehaviour
         targetGS.setStockpile(ResourceType.Silver, 200);
         targetGS.addResourcePerTick(ResourceType.Silver, 9);
 
-        int buildBank = 0;
-        int waitCount = 0;
-        int stoneMiner = 0;
-        int woodsman = 0;
 
         //ltpID.iterativeDepth(initialGS, targetGS, true);
 
@@ -41,10 +37,10 @@ public class TestLTPMonoBehavior : MonoBehaviour
     }
 
     public bool callback(Stack<Work> result) {
-        Debug.Log("Path found");
         foreach(Work w in result) {
-            Debug.Log(w);
+            Debug.Log(w.workType + "  " + w.buildingType);
         }
         return true;
     }
+    
 }

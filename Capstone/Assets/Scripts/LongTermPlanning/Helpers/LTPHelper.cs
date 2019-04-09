@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public static class LTPHelper {
-
-    public static readonly int WAIT_TIME = 10;
+    
     public static readonly int MAX_DEPTH = 500000; // 500K searches
 
 
@@ -17,19 +16,25 @@ public static class LTPHelper {
         //int totalWaitTime = 0;
         int totalRPTDelta = 0;
 
+        // Are there any resources that are impossible to get at this moment (ignoring workers)
+        HashSet<ResourceType> unaquirableResources = targetGS.getCPTResourceTypes();
+        unaquirableResources.ExceptWith(currentGS.slotsForIncome());
+
+        // Compare numerical distance
         foreach (ResourceType rt in targetGS.getAllResourceTypes())  {
             int currentStockpile = currentGS.getStockpile(rt);
-            int targetStockpile = targetGS.getStockpile(rt);
+            int targetStockpile  =  targetGS.getStockpile(rt);
 
             int currentResourcePerTick = currentGS.getPerTickChange(rt);
-            int targetResourcePerTick = targetGS.getPerTickChange(rt);
+            int targetResourcePerTick  =  targetGS.getPerTickChange(rt);
 
             // How long will it take to get to the target if we just wait? 
             int resourceDelta = Mathf.Max(0, targetStockpile - currentStockpile);
-
-            int resourceWaitTime = (currentResourcePerTick == 0) ?
-                                       resourceDelta : // If we make this value int.maxValue then we have overflow problems
-                                       resourceDelta / currentResourcePerTick;
+            int resourceWaitTime = resourceDelta;
+            if (currentResourcePerTick == 0) {
+            } else {
+                resourceWaitTime /= currentResourcePerTick;
+            }
 
             // How far are we from the target resource income rate? 
             int RPTDelta = Mathf.Max(0, targetResourcePerTick - currentResourcePerTick);
@@ -38,17 +43,15 @@ public static class LTPHelper {
             //totalWaitTime += resourceWaitTime;
             totalRPTDelta += RPTDelta;
         }
-        
-        //return totalRPTDelta + totalWaitTime;
-        return maxWaitTime + totalRPTDelta;
+        //Debug.Log("** helper func   neighbor: " + totalWaitTime + " + " + totalRPTDelta + " + " + unaquirableResources.Count);
+        //return totalWaitTime + totalRPTDelta + unaquirableResources.Count;
+        return maxWaitTime + totalRPTDelta + unaquirableResources.Count;
     }
 
     public static HashSet<QGameState> getNeighbors(QGameState qEntry) {
         // For a given game state return all valid edges out of it
 
         HashSet<QGameState> result = new HashSet<QGameState>();
-        result.Add(QGameStateFactory.waitTransition(qEntry, WAIT_TIME));
-
         BuildingGS gs = qEntry.gameState;
         
         // Branches related to workers
@@ -60,18 +63,30 @@ public static class LTPHelper {
                 result.Add(neighbor);
             }
         }
-        
+
+        // The length of all the no-op edges we want to consider
+        HashSet<int> waitTimes = new HashSet<int>();
+
         // Branches related to Buildings
         // TODO: Why build a building if we can't populate it with a worker? 
         foreach (BuildingType bt in BuildingFactory.allBuildings) {
             // One branch for every new possible building
             IBuilding possibleBuilding = BuildingFactory.buildNew(bt, -1, -1); // TODO: do we care about pos when doing A*? 
-            if (qEntry.gameState.canBuyBuilding(possibleBuilding)) {
+            if (gs.canBuyBuilding(possibleBuilding)) {
                 // If we can build this building, then add a branch
                 QGameState neighbor = QGameStateFactory.buyBuilding(qEntry, possibleBuilding);
                 result.Add(neighbor);
+
+                // For increased fidelity, each building time can also be a no-op
+                //waitTimes.Add(possibleBuilding.timeToBuild());
             }
         }
+
+        // Add in some no-op edges
+        foreach (int waitTime in waitTimes) {
+            //result.Add(QGameStateFactory.waitTransition(qEntry, waitTime));
+        }
+        result.Add(QGameStateFactory.waitTransition(qEntry, 10));
 
         return result;
     }

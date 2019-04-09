@@ -67,7 +67,7 @@ public class ConstructionController : MonoBehaviour {
             throw new System.Exception("Trying to build without a tile. Please call turnOn(Tile t) before trying to build something");
         }
         IBuilding newBuilding = BuildingFactory.buildNew(bt, tile.x, tile.y);
-        this.gc.forceBuildBuilding(newBuilding);
+        this.gc.startBuildBuilding(newBuilding);
     }
 
 
