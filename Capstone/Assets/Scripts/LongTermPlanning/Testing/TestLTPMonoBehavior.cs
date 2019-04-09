@@ -28,10 +28,7 @@ public class TestLTPMonoBehavior : MonoBehaviour
         targetGS.addResourcePerTick(ResourceType.Wood, 6);
         targetGS.setStockpile(ResourceType.Silver, 200);
         targetGS.addResourcePerTick(ResourceType.Silver, 9);
-
-
-        //ltpID.iterativeDepth(initialGS, targetGS, true);
-
+        
         ltp.plan(initialGS, targetGS, callback);
         
     }
