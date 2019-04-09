@@ -139,7 +139,7 @@ public class StartGameScript : MonoBehaviour
                 {
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI]))
                     {
-                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
+                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime * fps;
                         workerBuildType[indexAI] = "stone";
                         otherTextDisplay.text = "AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].resourceCount;
                         //Debug.Log("AI's stone workers will be increased by 1. Current: " + gameStates[indexAI].resources["stone"].workerCount);
@@ -149,7 +149,7 @@ public class StartGameScript : MonoBehaviour
                 {
                     if (canBuildWorker(gameStates[indexAI], workerBuildTimes[indexAI]))
                     {
-                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime;
+                        workerBuildTimes[indexAI] = gameTime + LongTermPlanning.workerBuildTime * fps;
                         workerBuildType[indexAI] = "wood";
                         otherTextDisplay.text = "AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].resourceCount;
                         //Debug.Log("AI's wood workers will be increased by 1. Current: " + gameStates[indexAI].resources["wood"].workerCount);
