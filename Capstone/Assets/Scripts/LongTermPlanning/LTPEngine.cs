@@ -39,10 +39,6 @@ public static class LTPEngine {
             }
             totalChecks++;
             QGameState qe = priorityQueue.DequeueValue();
-           // Debug.Log("--------------------------------");
-          //  Debug.Log("Work To Get Here: " + qe.transitionWork.workType);
-          //  Debug.Log("Work To Get Here: " + qe.transitionWork.buildingType);
-          //  Debug.Log("Cost To Get Here: " + qe.costToGetHere);
 
             // Early exit conditions
             if (LTPHelper.compareGameState(qe.gameState, targetGS) <= 0) {
@@ -75,16 +71,9 @@ public static class LTPEngine {
                     // If we already have a better way to get to the neighbor
                     continue;
                 }
-
-              //  Debug.Log("** Adding neighbor: ");
-              //  Debug.Log("** Work To Get neighbor: " + neighbor.transitionWork.workType);
-               // Debug.Log("** Work To Get neighbor: " + neighbor.transitionWork.buildingType);
-               // Debug.Log("** Cost To Get neighbor: " + neighbor.costToGetHere);
+                
                 int compare = LTPHelper.compareGameState(neighbor.gameState, targetGS);
                 int heuristic = compare; //+ neighbor.costToGetHere;
-                //Debug.Log("** Heuristic   neighbor: " + heuristic + " = " + compare + " + "+ neighbor.costToGetHere);
-
-
 
                 priorityQueue.Enqueue(heuristic, neighbor);
             } // End foreach neighbor

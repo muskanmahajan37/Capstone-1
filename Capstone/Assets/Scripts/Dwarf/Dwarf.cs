@@ -10,7 +10,7 @@ public class Dwarf : MonoBehaviour {
     Tile currentTile;
 
 
-    private static float MOVEMENT_SPEED = 0.0000001f; // How much time in seconds should the dwarf wait before moving to a new tile? 
+    private static float MOVEMENT_SPEED = 0.05f; // How much time in seconds should the dwarf wait before moving to a new tile? 
     private static Tilemap tileMap;
     private static TileBase selfPicture;
 

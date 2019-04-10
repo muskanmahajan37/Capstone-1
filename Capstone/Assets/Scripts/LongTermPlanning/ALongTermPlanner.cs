@@ -38,8 +38,11 @@ public abstract class ALongTermPlanner : MonoBehaviour {
             // Note, the finalResult value should be the targetGS. IE: We're looping backwards from
             // finish to start. So last element into the list == the first unit of work that
             // should be done
-            //UnityEngine.Debug.Log(engineOutput.transitionWork.buildingType + " " + engineOutput.transitionWork.workType);
-            result.Push(engineOutput.transitionWork);
+            UnityEngine.Debug.Log(engineOutput.transitionWork.buildingType + " " + engineOutput.transitionWork.workType + "  " + engineOutput.transitionWork.frameWait);
+
+            if (engineOutput.transitionWork.workType != EWork.Wait) {
+                result.Push(engineOutput.transitionWork);
+            }
             engineOutput = engineOutput.parent;
         }
 

@@ -112,7 +112,6 @@ public class GameController : MonoBehaviour
         // First, mark the target tile as occupied
         mapController.construction(newBuilding.position());
         // Wait for the designated time
-        Debug.Log(newBuilding.timeToBuild());
         yield return new WaitForSeconds(newBuilding.timeToBuild() * GameSetup.TICK_LENGHT_SEC);
         forceBuildBuilding(newBuilding);
     }

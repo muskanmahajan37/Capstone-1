@@ -31,8 +31,7 @@ public static class LTPHelper {
             // How long will it take to get to the target if we just wait? 
             int resourceDelta = Mathf.Max(0, targetStockpile - currentStockpile);
             int resourceWaitTime = resourceDelta;
-            if (currentResourcePerTick == 0) {
-            } else {
+            if (currentResourcePerTick != 0) {
                 resourceWaitTime /= currentResourcePerTick;
             }
 
@@ -43,7 +42,6 @@ public static class LTPHelper {
             //totalWaitTime += resourceWaitTime;
             totalRPTDelta += RPTDelta;
         }
-        //Debug.Log("** helper func   neighbor: " + totalWaitTime + " + " + totalRPTDelta + " + " + unaquirableResources.Count);
         //return totalWaitTime + totalRPTDelta + unaquirableResources.Count;
         return maxWaitTime + totalRPTDelta + unaquirableResources.Count;
     }
@@ -65,7 +63,7 @@ public static class LTPHelper {
         }
 
         // The length of all the no-op edges we want to consider
-        HashSet<int> waitTimes = new HashSet<int>();
+        HashSet<int> waitTimes = new HashSet<int>() { 10 };
 
         // Branches related to Buildings
         // TODO: Why build a building if we can't populate it with a worker? 
@@ -78,15 +76,14 @@ public static class LTPHelper {
                 result.Add(neighbor);
 
                 // For increased fidelity, each building time can also be a no-op
-                //waitTimes.Add(possibleBuilding.timeToBuild());
+                waitTimes.Add(possibleBuilding.timeToBuild());
             }
         }
 
         // Add in some no-op edges
         foreach (int waitTime in waitTimes) {
-            //result.Add(QGameStateFactory.waitTransition(qEntry, waitTime));
+            result.Add(QGameStateFactory.waitTransition(qEntry, waitTime));
         }
-        result.Add(QGameStateFactory.waitTransition(qEntry, 10));
 
         return result;
     }

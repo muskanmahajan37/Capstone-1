@@ -20,14 +20,14 @@ public class MidLevelManager : MonoBehaviour {
 
 
         BuildingGS targetGS = new BuildingGS();
-        targetGS.setStockpile(ResourceType.Gold, 20000);
-        targetGS.addResourcePerTick(ResourceType.Gold, 15);
-        targetGS.setStockpile(ResourceType.Stone, 20000);
-        targetGS.addResourcePerTick(ResourceType.Stone, 8);
-        targetGS.setStockpile(ResourceType.Wood, 20000);
-        targetGS.addResourcePerTick(ResourceType.Wood, 11);
-        targetGS.setStockpile(ResourceType.Silver, 2000);
-        targetGS.addResourcePerTick(ResourceType.Silver, 7);
+        targetGS.setStockpile(ResourceType.Gold, 200);
+        targetGS.addResourcePerTick(ResourceType.Gold, 60);
+        targetGS.setStockpile(ResourceType.Stone, 200);
+        targetGS.addResourcePerTick(ResourceType.Stone, 30);
+        targetGS.setStockpile(ResourceType.Wood, 200);
+        targetGS.addResourcePerTick(ResourceType.Wood, 30);
+        targetGS.setStockpile(ResourceType.Silver, 200);
+        targetGS.addResourcePerTick(ResourceType.Silver, 30);
 
         ltp.plan(initialGS, targetGS, callback);
     }
@@ -39,7 +39,6 @@ public class MidLevelManager : MonoBehaviour {
 
     private IEnumerator executeOrders(Stack<Work> workOrder) {
         foreach (Work w in workOrder) {
-            Debug.Log("Starting new work");
             switch (w.workType) {
                 case EWork.Wait:
                 case EWork.EMPTY:
