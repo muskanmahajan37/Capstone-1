@@ -444,48 +444,49 @@ namespace PriorityQueueDemo
     }
 
 
-    public class MemoryBoundedPriorityQueue<TPriority, TValue> : PriorityQueue<TPriority, TValue> {
-
+    public class MemoryBoundedPriorityQueue : PriorityQueue<QPriority, QGameState> {
         private int maxSize;
 
-        public MemoryBoundedPriorityQueue(int maxSize) : base(maxSize) { this.maxSize = maxSize; }
+        public MemoryBoundedPriorityQueue(int maxSize) : base(maxSize)
+            { this.maxSize = maxSize; }
 
-
-        public override void Enqueue(TPriority priority, TValue value) {
+        public override void Enqueue(QPriority priority, QGameState value) {
             base.Enqueue(priority, value);
             if (_baseHeap.Count > maxSize) { base.removeLast(); }
         }
 
     }
 
-    public class AccordionPriorityQueue<TPriority, TValue> : PriorityQueue<TPriority, TValue> {
+    public class AccordionPriorityQueue : PriorityQueue<QPriority, QGameState> {
         private int maxSize;
-        public AccordionPriorityQueue(int maxSize) : base(maxSize) { this.maxSize = maxSize; }
 
-        public override void Enqueue(TPriority priority, TValue value) {
+        public AccordionPriorityQueue(int maxSize) :  base(maxSize)
+            { this.maxSize = maxSize; }
+
+        public override void Enqueue(QPriority priority, QGameState value) {
             base.Enqueue(priority, value);
             if (_baseHeap.Count > maxSize) { base.removeBottomHalf(); }
         }
     }
 
-    public class IDPriorityQueue<TPriority, TValue> : PriorityQueue<int, QGameState> {
+    public class IDPriorityQueue : PriorityQueue<QPriority, QGameState> {
         private int nextBound;
         public int NextBount { get { return nextBound; } }
-
         private int maxDepth;
-        public IDPriorityQueue(int maxDepth = 10) : base() {
+
+        public IDPriorityQueue(int maxDepth = 10) : base(maxDepth) {
             this.maxDepth = maxDepth;
             this.nextBound = int.MaxValue;
         }
 
-        public override void Enqueue(int priority, QGameState value) {
-            if (priority <= maxDepth) {
-                // Don't explore any nodes with (f+g) larger than bound
+        public override void Enqueue(QPriority priority, QGameState value) {
+            if (priority.estTotalDist <= maxDepth) {
+                // Don't explore any nodes that seem larger than the current bounds
                 base.Enqueue(priority, value);
             } else {
                 // Protocol says the reccomended next bound should be the smallest number
                 // that is larger than the current maxDepth
-                this.nextBound = Mathf.Min(priority, this.nextBound);
+                this.nextBound = Mathf.Min(priority.estTotalDist, this.nextBound);
             }
         }
     }

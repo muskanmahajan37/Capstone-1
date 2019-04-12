@@ -9,7 +9,7 @@ using PriorityQueueDemo;
 public class IterativeDeepiningLongTermPlanner : ALongTermPlanner
 {
 
-    private IDPriorityQueue<int, QGameState> ID_Queue;
+    private IDPriorityQueue ID_Queue;
 
     private BuildingGS initialGS;
     private BuildingGS targetGS;
@@ -34,7 +34,7 @@ public class IterativeDeepiningLongTermPlanner : ALongTermPlanner
         this.targetGS = targetGS;
         this.callback = callback;
 
-        this.ID_Queue = new IDPriorityQueue<int, QGameState>(initialDepth);
+        this.ID_Queue = new IDPriorityQueue(initialDepth);
         StartCoroutine(LTPEngine.BuildPlan(initialGS, targetGS, ID_Queue, id_processResult));
         StartCoroutine(base.waitForFinish(callback));
     }

@@ -4,8 +4,7 @@ using UnityEngine;
 using System;
 
 // TODO: Impliment a GameState object pooler
-public class BuildingGS
-{
+public class BuildingGS {
     // Keeping track of what type of buildings exist is important
     // for when we want to redistribute workers and- or destroy buildings
       
@@ -13,6 +12,9 @@ public class BuildingGS
                                                                        // NOTE: You should never really add to this directly. 
                                                                        // Please use forceAddBuilding() function instead 
     protected Dictionary<ResourceType, int> resourceStockpile;
+    protected int resourcesSpent = 0; // Used to track total resources subtracted out of the game state
+                                      // Mostly only used when comparing gamestates in A* planner
+    public int totalResourcesSpent { get { return this.resourcesSpent; } }
 
     protected Dictionary<ResourceType, int> resourceChangePerTick;  // Short hand for what all the buildings are producing
     protected Dictionary<BuildingType, Queue<IBuilding>> openSpots; // Any building that is in this dictionary should have at least 1 open slot
@@ -39,7 +41,6 @@ public class BuildingGS
             this.resourceStockpile.Add(rc.resourceType, rc.change);
         }
     }
-
 
     // Copy constructor
     public BuildingGS(BuildingGS other) {
@@ -69,6 +70,24 @@ public class BuildingGS
 
         // Resources per tick will be handled by adding buildings
     }
+    
+
+    // Main simulator
+    public void timePasses(int numberOfTicks) {
+        // Run every building and if the building can't afford the upkeep cost then it doesn't produce anything this tick
+        foreach (KeyValuePair<BuildingType, List<IBuilding>> kvp in this.buildings) {
+            BuildingType bt = kvp.Key;
+            foreach (IBuilding building in kvp.Value) {
+                if (canAffordUpkeep(building)) {
+                    // NOTE: building.simulate returns both output(+) and input(-) resources in 
+                    //       the provided List<ResourceChange> objects
+                    this.addToStockpile(building.simulate(numberOfTicks));
+                }
+                // Else can't afford upkeep means move to next building
+            }
+        }
+    }
+
 
     #region accessors
 
@@ -77,7 +96,7 @@ public class BuildingGS
         return 0;
     }
     
-    public int getPerTickChange(ResourceType rt) {
+    public int getChangePerTick(ResourceType rt) {
         if (this.resourceChangePerTick.ContainsKey(rt)) { return this.resourceChangePerTick[rt]; }
         return 0;
     }
@@ -96,7 +115,6 @@ public class BuildingGS
         return result;
     }
 
-
     public HashSet<ResourceType> slotsForIncome() {
         // Returns every resource we are/ can currently make if we had more workers
         HashSet<ResourceType> result = new HashSet<ResourceType>(this.resourceChangePerTick.Keys);
@@ -109,6 +127,7 @@ public class BuildingGS
     }
 
     private IEnumerable<IBuilding> getOpenSlotBuildings() {
+        // Get all the buildings with open slots
         List<IBuilding> result = new List<IBuilding>();
         foreach (KeyValuePair<BuildingType, Queue<IBuilding>> kvp in this.openSpots) {
             if (this.anyOpenSlots(kvp.Key)) {
@@ -119,6 +138,7 @@ public class BuildingGS
     }
 
     public IEnumerable<BuildingType> getOpenSlots() {
+        // Get all the types of buildings with open slots
         List<BuildingType> result = new List<BuildingType>(this.openSpots.Count);
         foreach(KeyValuePair<BuildingType, Queue<IBuilding>> kvp in this.openSpots) {
             if (this.anyOpenSlots(kvp.Key)) {
@@ -133,6 +153,7 @@ public class BuildingGS
     }
 
     public IBuilding getAnyOpenBuilding(BuildingType bt) {
+        // Get an instance of a building (of the provided type) that has an open slot, or null
         if (!this.openSpots.ContainsKey(bt)) { return null; } // No key, no slots
 
         while (this.openSpots[bt].Count > 0) { // Empty queue => no slots
@@ -147,21 +168,6 @@ public class BuildingGS
         return null;
     }
     #endregion
-
-    public void timePasses(int numberOfTicks) {
-        // Run every building and if the building can't afford the upkeep cost then it doesn't produce anything this tick
-        foreach(KeyValuePair<BuildingType, List<IBuilding>> kvp in this.buildings) {
-            BuildingType bt = kvp.Key;
-            foreach(IBuilding building in kvp.Value) {
-                if (canAffordUpkeep(building)) {
-                    // NOTE: building.simulate returns both output(+) and input(-) resources in 
-                    //       the provided List<ResourceChange> objects
-                    this.addToStockpile(building.simulate(numberOfTicks));
-                }
-                // Else can't afford upkeep means move to next building
-            }
-        }
-    }
 
     #region Modifying Buildings
 
@@ -351,7 +357,10 @@ public class BuildingGS
             { this.resourceStockpile[rt] = 0; }
 
         if (addTo) { this.resourceStockpile[rt] += change; }
-        else       { this.resourceStockpile[rt] -= change; }
+        else       {
+            this.resourceStockpile[rt] -= change;
+            this.resourcesSpent += change;
+        }
     }
 
     // Resource Per Tick
@@ -396,7 +405,7 @@ public class BuildingGS
         // TODO: Consider adding "free-land remaining" to this hash
         int hash = 17;
         foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile) {
-            int resourceChangePerTick = this.getPerTickChange(kvp.Key);
+            int resourceChangePerTick = this.getChangePerTick(kvp.Key);
             hash = (hash * 23) + Convert.ToInt32(kvp.Key);
             hash = (hash * 23) + kvp.Value;
             hash = (hash * 23) + resourceChangePerTick;

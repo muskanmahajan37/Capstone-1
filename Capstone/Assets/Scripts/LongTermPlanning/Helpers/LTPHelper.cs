@@ -1,49 +1,46 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 public static class LTPHelper {
     
     public static readonly int MAX_DEPTH = 500000; // 500K searches
 
 
-    public static int compareGameState(BuildingGS currentGS, BuildingGS targetGS) {
-        // How many time cycles will it take if we do nothing? 
-        // NOTE: It's expected that currentGS and targetGS have the types of resources
-        //       (Or at the least, that targetGS is a subset of currentGS)
-
-        int maxWaitTime = 0;
-        //int totalWaitTime = 0;
-        int totalRPTDelta = 0;
-
+    public static int unaquirableResources(BuildingGS currentGS, BuildingGS targetGS) {
         // Are there any resources that are impossible to get at this moment (ignoring workers)
         HashSet<ResourceType> unaquirableResources = targetGS.getCPTResourceTypes();
         unaquirableResources.ExceptWith(currentGS.slotsForIncome());
+        return unaquirableResources.Count;
+    }
+
+    public static RemainingDistance estematedRemainingDistance(BuildingGS currentGS, BuildingGS targetGS) {
+        // How far away are we from the target? 
+        RemainingDistance result = new RemainingDistance();
 
         // Compare numerical distance
-        foreach (ResourceType rt in targetGS.getAllResourceTypes())  {
+        foreach (ResourceType rt in targetGS.getAllResourceTypes()) {
             int currentStockpile = currentGS.getStockpile(rt);
-            int targetStockpile  =  targetGS.getStockpile(rt);
+            int targetStockpile = targetGS.getStockpile(rt);
+            int stockpileDelta = Mathf.Max(0, targetStockpile - currentStockpile);
 
-            int currentResourcePerTick = currentGS.getPerTickChange(rt);
-            int targetResourcePerTick  =  targetGS.getPerTickChange(rt);
+            int currentResourcePerTick = currentGS.getChangePerTick(rt);
+            int targetResourcePerTick = targetGS.getChangePerTick(rt);
+            int rptDelta = Mathf.Max(0, targetResourcePerTick - currentResourcePerTick);
 
-            // How long will it take to get to the target if we just wait? 
-            int resourceDelta = Mathf.Max(0, targetStockpile - currentStockpile);
-            int resourceWaitTime = resourceDelta;
-            if (currentResourcePerTick != 0) {
-                resourceWaitTime /= currentResourcePerTick;
+            if (currentResourcePerTick == 0) { 
+                result.addInfinity();
+            } else {
+                float exactWaitTime = stockpileDelta / (float)currentResourcePerTick;
+                int estWaitTime = (int)(exactWaitTime + 0.5f);
+                result.updateWaitTime(estWaitTime);
             }
 
-            // How far are we from the target resource income rate? 
-            int RPTDelta = Mathf.Max(0, targetResourcePerTick - currentResourcePerTick);
-            
-            maxWaitTime = Mathf.Max(maxWaitTime, resourceWaitTime);
-            //totalWaitTime += resourceWaitTime;
-            totalRPTDelta += RPTDelta;
+            result.updateCPTDelta(rptDelta);
+
         }
-        //return totalWaitTime + totalRPTDelta + unaquirableResources.Count;
-        return maxWaitTime + totalRPTDelta + unaquirableResources.Count;
+        return result;
     }
 
     public static HashSet<QGameState> getNeighbors(QGameState qEntry) {
@@ -76,7 +73,7 @@ public static class LTPHelper {
                 result.Add(neighbor);
 
                 // For increased fidelity, each building time can also be a no-op
-                waitTimes.Add(possibleBuilding.timeToBuild());
+                //waitTimes.Add(possibleBuilding.timeToBuild());
             }
         }
 
@@ -86,5 +83,39 @@ public static class LTPHelper {
         }
 
         return result;
+    }
+}
+
+public class RemainingDistance {
+
+    private int numberOfInfinities = 0;
+    public int NumberOfInfinities { get { return numberOfInfinities; } }
+
+    private int maxWaitTime = 0;
+    public int MaxWaitTime { get { return maxWaitTime; } }
+
+    private int totalWaitTime = 0;
+    public int TotalWaitTime { get { return totalWaitTime; } }
+
+    private int totalChangePerTickDelta = 0;
+    public int TotalChangePerTickDelta { get { return totalChangePerTickDelta; } }
+
+
+
+    public void addInfinity() { numberOfInfinities++; }
+
+    public void updateWaitTime(int estTime) {
+        totalWaitTime += estTime;
+        maxWaitTime = Mathf.Max(maxWaitTime, estTime);
+    }
+
+    public void updateCPTDelta(int cptDelta) {
+        this.totalChangePerTickDelta += cptDelta;
+    }
+
+    public bool atTarget() {
+        return numberOfInfinities == 0 && 
+               totalWaitTime == 0 &&
+               totalChangePerTickDelta == 0;
     }
 }

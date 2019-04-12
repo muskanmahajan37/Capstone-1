@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class QGameState {
     // The thing that gets put onto the priority queue           
 

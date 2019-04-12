@@ -139,7 +139,7 @@ public class GameController : MonoBehaviour
         allResources.AddRange(newBuiding.inputResources());
         foreach(ResourceType rt in allResources) {
             int newStockpile = this.gameState.getStockpile(rt);
-            int newRPT = this.gameState.getPerTickChange(rt);
+            int newRPT = this.gameState.getChangePerTick(rt);
             resourceDisplay.updateCountAndRPT(rt, newStockpile, newRPT);
         }
 

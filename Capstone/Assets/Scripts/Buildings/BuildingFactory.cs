@@ -13,9 +13,9 @@ public static class BuildingFactory {
     public static readonly int bankProdPerPop = 5;
     public static readonly int bankMaxPop = 3;
     public static List<ResourceChange> bankBuildCost = new List<ResourceChange>() {
-        new ResourceChange(ResourceType.Stone, 100),
-        new ResourceChange(ResourceType.Gold, 50),
-        new ResourceChange(ResourceType.Wood, 150)
+        new ResourceChange(ResourceType.Stone, 10),
+        new ResourceChange(ResourceType.Gold, 5),
+        new ResourceChange(ResourceType.Wood, 15)
     };
     public static IBuilding buildNewBank(int x, int y) {
         return new SimpleBuilding(
@@ -32,8 +32,8 @@ public static class BuildingFactory {
     public static readonly int stoneMasonMaxPop = 6;
     public static readonly List<ResourceChange> stoneMasonBuildCost = new List<ResourceChange>()
     {
-        new ResourceChange(ResourceType.Gold, 150),
-        new ResourceChange(ResourceType.Wood, 50)
+        new ResourceChange(ResourceType.Gold, 15),
+        new ResourceChange(ResourceType.Wood, 5)
     };
     public static IBuilding buildNewStoneMason(int x, int y) {
         return new SimpleBuilding(
@@ -48,7 +48,7 @@ public static class BuildingFactory {
     public static readonly int woodCutterProdPerPop = 3;
     public static readonly int woodCutterMaxPop = 2;
     public static readonly List<ResourceChange> woodCutterBuildCost = new List<ResourceChange>() {
-        new ResourceChange(ResourceType.Gold, 80)
+        new ResourceChange(ResourceType.Gold, 8)
     };
     public static IBuilding buildNewWoodCutter(int x, int y) {
         return new SimpleBuilding(

@@ -24,7 +24,7 @@ public abstract class ALongTermPlanner : MonoBehaviour {
         UnityEngine.Debug.Log("IG time: " + engineOutput.costToGetHere);
         foreach (ResourceType rt in engineOutput.gameState.getAllResourceTypes()) {
             UnityEngine.Debug.Log(rt + "Stockpile: " + engineOutput.gameState.getStockpile(rt));
-            UnityEngine.Debug.Log(rt + "tickrate: " + engineOutput.gameState.getPerTickChange(rt));
+            UnityEngine.Debug.Log(rt + "tickrate: " + engineOutput.gameState.getChangePerTick(rt));
         }
         if (engineOutput == null) {
             UnityEngine.Debug.Log("No path found");

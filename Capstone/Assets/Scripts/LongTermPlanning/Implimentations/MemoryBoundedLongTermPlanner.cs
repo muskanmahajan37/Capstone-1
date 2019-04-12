@@ -13,12 +13,12 @@ public class MemoryBoundedLongTermPlanner : ALongTermPlanner {
     public void memoryBoundedLTP(BuildingGS initialGS,
                                  BuildingGS targetGS,
                                  Func<Stack<Work>, bool> callback,
-                                 int memoryBound = 2000) {
+                                 int memoryBound = 200) {
         /**
          * Find a path from the initialGS to the targetGS. The resultant path (translted into an ordered list of Work)
          * will be pumped into the provided callback once it's ready. 
          */
-        PriorityQueue<int, QGameState> memoryBoundedQ = new MemoryBoundedPriorityQueue<int, QGameState>(memoryBound);
+        PriorityQueue<QPriority, QGameState> memoryBoundedQ = new MemoryBoundedPriorityQueue(memoryBound);
         StartCoroutine(LTPEngine.BuildPlan(initialGS, targetGS, memoryBoundedQ, base.processResult));
         StartCoroutine(base.waitForFinish(callback));
     }

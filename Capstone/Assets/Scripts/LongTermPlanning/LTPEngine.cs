@@ -4,7 +4,6 @@ using UnityEngine;
 using System;
 using PriorityQueueDemo;
 
-
 public static class LTPEngine {
 
     /*
@@ -12,12 +11,12 @@ public static class LTPEngine {
      * Increasing this number may cause substantial lag,
      * decreasing this number may take longer real world time to calculate a path
      */
-    private static readonly int NODES_CHECKED_PER_YIELD = 100; // Check 1 nodes every frame
+    private static readonly int NODES_CHECKED_PER_YIELD = 200; // Check 1 nodes every frame
 
 
     public static IEnumerator BuildPlan(BuildingGS initialGS,
                                          BuildingGS targetGS,
-                                         PriorityQueue<int, QGameState> priorityQueue,
+                                         PriorityQueue<QPriority, QGameState> priorityQueue,
                                          Func<QGameState, bool> finishCallback) {
         int nodesChecked = 0;
         // Initialize data structures
@@ -26,7 +25,8 @@ public static class LTPEngine {
         // NOTE: Don't add the initial state to the bestCostToGetHere, that will be done automatically
         Work initialWork = new Work(EWork.EMPTY, BuildingType.NONE, 0);
         QGameState firstGS = new QGameState(initialGS, null, initialWork, 0);
-        priorityQueue.Enqueue(0, firstGS);
+        QPriority firstPriority = new QPriority(firstGS, targetGS);
+        priorityQueue.Enqueue(firstPriority, firstGS);
 
 
         int totalChecks = 0;
@@ -40,8 +40,12 @@ public static class LTPEngine {
             totalChecks++;
             QGameState qe = priorityQueue.DequeueValue();
 
+            //Debug.Log("============================================");
+            //Debug.Log("Cost to get here: " + qe.costToGetHere);
+            //Debug.Log("incoming work: " + qe.transitionWork.workType + "  " + qe.transitionWork.buildingType);
+
             // Early exit conditions
-            if (LTPHelper.compareGameState(qe.gameState, targetGS) <= 0) {
+            if (LTPHelper.estematedRemainingDistance(qe.gameState, targetGS).atTarget()) {
                 // If we are 0 distance away from the target game state
                 // IE: If we have found the target game state
                 Debug.Log("Nocab flag 1");
@@ -71,9 +75,18 @@ public static class LTPEngine {
                     // If we already have a better way to get to the neighbor
                     continue;
                 }
-                
-                int compare = LTPHelper.compareGameState(neighbor.gameState, targetGS);
-                int heuristic = compare; //+ neighbor.costToGetHere;
+
+                QPriority heuristic = new QPriority(neighbor, targetGS);
+
+                //Debug.Log("********************");
+                //Debug.Log("**  Adding neighbor: ");
+                //Debug.Log("**  transition work: " + neighbor.transitionWork.workType + "  " + neighbor.transitionWork.buildingType);
+                //Debug.Log(" +  infinities     : " + heuristic.numberOfInfinities);
+                //Debug.Log(" +  unaquiriable   : " + heuristic.unaquirableResourceCount);
+                //Debug.Log(" +  maxWaitTime    : " + heuristic.maxWaitTime);
+                //Debug.Log(" +  totalCPTDelta  : " + heuristic.totalCPTDelta);
+                //Debug.Log(" +  fudge factor   : " + heuristic.totalResourcesSpent);
+
 
                 priorityQueue.Enqueue(heuristic, neighbor);
             } // End foreach neighbor

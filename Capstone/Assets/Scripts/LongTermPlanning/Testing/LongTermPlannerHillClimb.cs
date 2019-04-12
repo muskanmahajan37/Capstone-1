@@ -22,13 +22,13 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
 
         BuildingGS targetGS = new BuildingGS();
         targetGS.setStockpile(ResourceType.Gold, 20000);
-        targetGS.addResourcePerTick(ResourceType.Gold, 2250);
+        targetGS.addResourcePerTick(ResourceType.Gold, 0);
         targetGS.setStockpile(ResourceType.Stone, 20000);
-        targetGS.addResourcePerTick(ResourceType.Stone, 1430);
+        targetGS.addResourcePerTick(ResourceType.Stone, 0);
         targetGS.setStockpile(ResourceType.Wood, 20000);
-        targetGS.addResourcePerTick(ResourceType.Wood, 995);
+        targetGS.addResourcePerTick(ResourceType.Wood, 0);
         targetGS.setStockpile(ResourceType.Silver, 20000);
-        targetGS.addResourcePerTick(ResourceType.Silver, 780);
+        targetGS.addResourcePerTick(ResourceType.Silver, 0);
 
         UnityEngine.Debug.Log(Stopwatch.Frequency);
         UnityEngine.Debug.Log("StartTime: " + Stopwatch.GetTimestamp());
@@ -36,6 +36,7 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
     }
 
     private bool callback(Stack<Work> work) {
+        UnityEngine.Debug.Log("Finished");
         return true;
     }
 
