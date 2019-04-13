@@ -6,9 +6,9 @@ public class God
 {
     private float lastGameTick = 0;
 
-    private static CampaignType campaignType;
-    private static AIPersonalityType aiPersonality;
-    private static LongTermPlannerType longTermPlanner;
+    public static CampaignType campaignType;
+    public static AIPersonalityType aiPersonality;
+    public static LongTermPlannerType longTermPlanner;
 
     private readonly int noOfActors = 2;
 
@@ -23,15 +23,7 @@ public class God
 
     private Stack<Work> aiCurrentPlan;
 
-    public static void startGame(CampaignType campaignType, AIPersonalityType aiPersonality, LongTermPlannerType longTermPlannerType = LongTermPlannerType.MemoryBound)
-    {
-        God.campaignType = campaignType;
-        God.aiPersonality = aiPersonality;
-        God.longTermPlanner = longTermPlannerType;
-        new God().startGame();
-    }
-
-    private void startGame()
+    public void startGame()
     {
         setStartGameState();
         setTargetGameStates();
@@ -173,7 +165,6 @@ public class God
         {
             declareGameWon(indexActor);
         }
-
     }
 
     private void declareGameWon(int indexActor)

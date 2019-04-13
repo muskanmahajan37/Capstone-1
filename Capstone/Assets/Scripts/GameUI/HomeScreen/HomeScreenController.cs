@@ -10,13 +10,9 @@ public class HomeScreenController : MonoBehaviour
     private AIPersonalityType aIPersonality;
     private CampaignType campaignType;
 
-
     public List<CampaignTypeButton> campaignTypeButtons;
     public List<AiPersonalityButton> aiPersonalityTypeButtons;
     public Button startGameButton;
-
-    public Text mainTextDisplay;
-    public Text otherTextDisplay;
 
     // Start is called before the first frame update
     void Start()
@@ -34,7 +30,10 @@ public class HomeScreenController : MonoBehaviour
     private void startGame()
     {
         startGameButton.interactable = false;
-        God.startGame(campaignType, aIPersonality);
+        God.campaignType = campaignType;
+        God.aiPersonality = aIPersonality;
+        God.longTermPlanner = LongTermPlannerType.MemoryBound;
+        new God().startGame();
     }
 
     public void setPersonality(AIPersonalityType value)
