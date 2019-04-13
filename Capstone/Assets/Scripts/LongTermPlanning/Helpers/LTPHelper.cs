@@ -28,17 +28,19 @@ public static class LTPHelper {
             int currentResourcePerTick = currentGS.getChangePerTick(rt);
             int targetResourcePerTick = targetGS.getChangePerTick(rt);
             int rptDelta = Mathf.Max(0, targetResourcePerTick - currentResourcePerTick);
+            result.updateCPTDelta(rptDelta);
 
-            if (currentResourcePerTick == 0) { 
+            int currentBestResourcePerTick = currentGS.getBestPossibleChangePerTick(rt);
+            int bestPossibleRPTDelta = Mathf.Max(0, targetResourcePerTick - currentBestResourcePerTick);
+            result.updateBestPossibleCPTDelta(bestPossibleRPTDelta);
+
+            if (currentResourcePerTick <= 0) { 
                 result.addInfinity();
             } else {
                 float exactWaitTime = stockpileDelta / (float)currentResourcePerTick;
                 int estWaitTime = (int)(exactWaitTime + 0.5f);
                 result.updateWaitTime(estWaitTime);
             }
-
-            result.updateCPTDelta(rptDelta);
-
         }
         return result;
     }
@@ -88,34 +90,39 @@ public static class LTPHelper {
 
 public class RemainingDistance {
 
-    private int numberOfInfinities = 0;
-    public int NumberOfInfinities { get { return numberOfInfinities; } }
+    private int _numberOfInfinities = 0;
+    public int NumberOfInfinities { get { return _numberOfInfinities; } }
 
-    private int maxWaitTime = 0;
-    public int MaxWaitTime { get { return maxWaitTime; } }
+    private int _maxWaitTime = 0;
+    public int MaxWaitTime { get { return _maxWaitTime; } }
 
-    private int totalWaitTime = 0;
-    public int TotalWaitTime { get { return totalWaitTime; } }
+    private int _totalWaitTime = 0;
+    public int TotalWaitTime { get { return _totalWaitTime; } }
 
-    private int totalChangePerTickDelta = 0;
-    public int TotalChangePerTickDelta { get { return totalChangePerTickDelta; } }
+    private int _totalChangePerTickDelta = 0;
+    public int TotalChangePerTickDelta { get { return _totalChangePerTickDelta; } }
 
+    private int _bestChangePerTickDelta = 0;
+    public int BestChangePerTickDelta { get { return _bestChangePerTickDelta; } }
 
-
-    public void addInfinity() { numberOfInfinities++; }
+    public void addInfinity() { _numberOfInfinities++; }
 
     public void updateWaitTime(int estTime) {
-        totalWaitTime += estTime;
-        maxWaitTime = Mathf.Max(maxWaitTime, estTime);
+        _totalWaitTime += estTime;
+        _maxWaitTime = Mathf.Max(_maxWaitTime, estTime);
     }
 
     public void updateCPTDelta(int cptDelta) {
-        this.totalChangePerTickDelta += cptDelta;
+        this._totalChangePerTickDelta += cptDelta;
+    }
+
+    public void updateBestPossibleCPTDelta(int cptDelta) {
+        this._bestChangePerTickDelta += cptDelta;
     }
 
     public bool atTarget() {
-        return numberOfInfinities == 0 && 
-               totalWaitTime == 0 &&
-               totalChangePerTickDelta == 0;
+        return _numberOfInfinities <= 0 && 
+               _totalWaitTime <= 0 &&
+               _totalChangePerTickDelta <= 0;
     }
 }

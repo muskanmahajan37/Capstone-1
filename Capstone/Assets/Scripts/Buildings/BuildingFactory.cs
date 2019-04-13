@@ -74,14 +74,14 @@ public static class BuildingFactory {
         return new MultiResourceBuilding( BuildingType.SilverMine, new Vector2Int(x, y));
     }
     #endregion
-
+    
     #region Steel Blacksmith
     public static TileBase steelBlacksmithTile;
     public static readonly int steelBlacksmithMaxPop = 4;
     public static List<ResourceChange> steelBlacksmithBuildCost = new List<ResourceChange>() {
-        new ResourceChange(ResourceType.Gold, 500),
+        new ResourceChange(ResourceType.Gold, 100),
         new ResourceChange(ResourceType.Stone, 80),
-        new ResourceChange(ResourceType.Wood, 200),
+        new ResourceChange(ResourceType.Wood, 50),
         new ResourceChange(ResourceType.Iron, 20)
     };
     public static List<IResourceProducer> steelBlacksmithOutputResources = new List<IResourceProducer>() {
@@ -102,6 +102,8 @@ public static class BuildingFactory {
         BuildingType.WoodCutter,
 
         BuildingType.SilverMine,
+        BuildingType.CoalMine,
+        BuildingType.IronMine,
         BuildingType.SteelSmith
     };
 
@@ -126,12 +128,14 @@ public static class BuildingFactory {
             case BuildingType.WoodCutter: return buildNewWoodCutter(x, y);
 
             case BuildingType.SilverMine: return buildNewSilverMine(x, y);
+            case BuildingType.CoalMine: return new MultiResourceBuilding(BuildingType.CoalMine, new Vector2Int(x, y));
+            case BuildingType.IronMine: return new MultiResourceBuilding(BuildingType.IronMine, new Vector2Int(x, y));
             case BuildingType.SteelSmith: return buildNewSteelSmith(x, y);
             case BuildingType.NONE:
             default: throw new System.Exception("Unknown building type, can't build. Building Type: " + Enum.GetName(typeof(BuildingType), bt));
         }
     }
-    
+
     public static Dictionary<BuildingType, BuildingBlueprint> allBluePrints = new Dictionary<BuildingType, BuildingBlueprint>() {
         // Bank
         { BuildingType.Bank, new BuildingBlueprint(
@@ -177,6 +181,41 @@ public static class BuildingFactory {
             timeToBuild: 30,
             outputResourceProduction: silverMineOutputResources
             )
+        },
+
+        // Coal Maker
+        { BuildingType.CoalMine, new BuildingBlueprint(
+            buildingname: "Coal Maker",
+            maxPop: 3,
+            buildCost: new List<ResourceChange>() {
+                new ResourceChange(ResourceType.Stone, 100),
+                new ResourceChange(ResourceType.Wood, 300),
+                new ResourceChange(ResourceType.Gold, 90)
+            },
+            timeToBuild: 5,
+            outputResourceProduction: new List<IResourceProducer>() {
+                new SimpleResourceProducer(ResourceType.Coal, (int workers) => { return workers * 3; })
+            },
+            inputResourceProduction: new List<IResourceProducer>() {
+                new SimpleResourceProducer(ResourceType.Wood, (int workers) => { return workers * 1; })
+            }
+            )
+        },
+
+        // Iron Mine
+        { BuildingType.IronMine, new BuildingBlueprint(
+           buildingname: "Iron Mine",
+           maxPop: 8,
+           buildCost: new List<ResourceChange>() {
+               new ResourceChange(ResourceType.Gold, 80),
+               new ResourceChange(ResourceType.Stone, 50),
+               new ResourceChange(ResourceType.Wood, 120)
+           }, 
+           timeToBuild: 6,
+           outputResourceProduction: new List<IResourceProducer>() {
+               new SimpleResourceProducer(ResourceType.Iron, (int workers) => {return workers * 1; })
+           }
+           )
         },
 
         // Steel Smith

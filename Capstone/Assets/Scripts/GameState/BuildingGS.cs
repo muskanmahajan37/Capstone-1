@@ -7,35 +7,53 @@ using System;
 public class BuildingGS {
     // Keeping track of what type of buildings exist is important
     // for when we want to redistribute workers and- or destroy buildings
-      
+
     protected Dictionary<BuildingType, List<IBuilding>> buildings; // All the building this game state has sorted by their type
-                                                                       // NOTE: You should never really add to this directly. 
-                                                                       // Please use forceAddBuilding() function instead 
+                                                                   // NOTE: You should never really add to this directly. 
+                                                                   // Please use forceAddBuilding() function instead
+
+    protected Dictionary<BuildingType, Queue<IBuilding>> openSpots; // Any building that is in this dictionary should have at least 1 open slot
+
     protected Dictionary<ResourceType, int> resourceStockpile;
     protected int resourcesSpent = 0; // Used to track total resources subtracted out of the game state
                                       // Mostly only used when comparing gamestates in A* planner
     public int totalResourcesSpent { get { return this.resourcesSpent; } }
 
-    protected Dictionary<ResourceType, int> resourceChangePerTick;  // Short hand for what all the buildings are producing
-    protected Dictionary<BuildingType, Queue<IBuilding>> openSpots; // Any building that is in this dictionary should have at least 1 open slot
-
     protected ResourceMap resourceMap; // All of the resources for this gamestate, things like fertil land or coal outcroppings
+
+    private bool validRPT = false;
+    private Dictionary<ResourceType, int> _resourceChangePerTick;
+    protected Dictionary<ResourceType, int> resourceChangePerTick {
+        get {
+            if (!validRPT) { buildCPT(); }
+            return _resourceChangePerTick;
+        }
+    }
+
+    private Dictionary<ResourceType, int> _bestPossibleChangePerTick;
+    protected Dictionary<ResourceType, int> bestPossibleChangePerTick {
+        get {
+            if (!validRPT) { buildCPT(); }
+            return _bestPossibleChangePerTick;
+        }
+    }
+
 
     // TODO: Remove this constructor
     public BuildingGS() {
         this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
-        this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
         this.resourceMap = new ResourceMap();
+        this._resourceChangePerTick = new Dictionary<ResourceType, int>();
     }
 
     public BuildingGS(IEnumerable<ResourceChange> startingResources) {
         this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
-        this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
         this.resourceMap = new ResourceMap();
+        this._resourceChangePerTick = new Dictionary<ResourceType, int>();
 
         foreach (ResourceChange rc in startingResources) {
             this.resourceStockpile.Add(rc.resourceType, rc.change);
@@ -48,32 +66,34 @@ public class BuildingGS {
         // TODO: Do we really need to deep copy all the buildings? 
         this.buildings = new Dictionary<BuildingType, List<IBuilding>>();
         this.resourceStockpile = new Dictionary<ResourceType, int>();
-        this.resourceChangePerTick = new Dictionary<ResourceType, int>();
         this.openSpots = new Dictionary<BuildingType, Queue<IBuilding>>();
         this.resourceMap = new ResourceMap();
-
+        this._resourceChangePerTick = new Dictionary<ResourceType, int>();
 
         // Buildings
         foreach (KeyValuePair<BuildingType, List<IBuilding>> kvp in other.buildings) {
-            foreach(IBuilding otherBuilding in kvp.Value) {
+            foreach (IBuilding otherBuilding in kvp.Value) {
                 // Clone and add every building to this game state
                 // TODO: Do we have to clone? If we have units assigned then probably yes... 
                 IBuilding buildingClone = otherBuilding.deepClone();
                 this.forceAddBuilding(buildingClone);
             }
         }
-        
+
         // Stockpile
-        foreach(KeyValuePair<ResourceType, int> kvp in other.resourceStockpile) {
+        foreach (KeyValuePair<ResourceType, int> kvp in other.resourceStockpile) {
             this.addToStockpile(kvp.Key, kvp.Value);
         }
 
         // Resources per tick will be handled by adding buildings
+
+        this.resourcesSpent = other.resourcesSpent;
     }
-    
+
 
     // Main simulator
     public void timePasses(int numberOfTicks) {
+        validRPT = false; // Reset the change per tick values
         // Run every building and if the building can't afford the upkeep cost then it doesn't produce anything this tick
         foreach (KeyValuePair<BuildingType, List<IBuilding>> kvp in this.buildings) {
             BuildingType bt = kvp.Key;
@@ -95,14 +115,53 @@ public class BuildingGS {
         if (this.resourceStockpile.ContainsKey(rt)) { return this.resourceStockpile[rt]; }
         return 0;
     }
-    
+
     public int getChangePerTick(ResourceType rt) {
-        if (this.resourceChangePerTick.ContainsKey(rt)) { return this.resourceChangePerTick[rt]; }
-        return 0;
+        if (!this.resourceChangePerTick.ContainsKey(rt)) { return 0; }
+        return this.resourceChangePerTick[rt];
+    }
+
+    public int getBestPossibleChangePerTick(ResourceType rt) {
+        if (!this.bestPossibleChangePerTick.ContainsKey(rt)) { return 0; }
+        return this.resourceChangePerTick[rt];
+    }
+
+    private void buildCPT() {
+        // First, calculate the Exact change per tick by simulating the game state
+        Dictionary<ResourceType, int> stockpileBackup = new Dictionary<ResourceType, int>(this.resourceStockpile);
+        timePasses(1);
+        foreach (ResourceType key in this.resourceStockpile.Keys) {
+            int currentVal = stockpileBackup.ContainsKey(key)   ? stockpileBackup[key]   : 0;
+            int futureVal  = resourceStockpile.ContainsKey(key) ? resourceStockpile[key] : 0;
+            int difference = futureVal - currentVal;
+            _resourceChangePerTick[key] = difference;
+        }
+        this.resourceStockpile = stockpileBackup;
+
+        // Determine the best possible output of this game state
+        // IE: all buildings maxed out workers
+        // Used for A* to determing more tie breaker cases
+        this._bestPossibleChangePerTick = new Dictionary<ResourceType, int>();
+        foreach(List<IBuilding> buildings in this.buildings.Values) {
+            // Go through all the buildings
+            if (buildings.Count == 0) { continue; }
+            foreach (IBuilding b in buildings) {
+                foreach(ResourceChange output in b.bestPossibleOutputResourceProduction()) {
+                    // Go through every output quantity (in the best case) for this building
+                    if (!_bestPossibleChangePerTick.ContainsKey(output.resourceType))
+                        { _bestPossibleChangePerTick[output.resourceType] = 0; }
+
+                    _bestPossibleChangePerTick[output.resourceType] += output.change;
+                }
+            }
+        }
+
+        validRPT = true;
     }
 
     public HashSet<ResourceType> getCPTResourceTypes() {
         return new HashSet<ResourceType>(this.resourceChangePerTick.Keys);
+
     }
 
     public HashSet<ResourceType> getStockpileResourceTypes() {
@@ -137,7 +196,7 @@ public class BuildingGS {
         return result;
     }
 
-    public IEnumerable<BuildingType> getOpenSlots() {
+    public List<BuildingType> getOpenSlots() {
         // Get all the types of buildings with open slots
         List<BuildingType> result = new List<BuildingType>(this.openSpots.Count);
         foreach(KeyValuePair<BuildingType, Queue<IBuilding>> kvp in this.openSpots) {
@@ -166,6 +225,24 @@ public class BuildingGS {
             }
         }
         return null;
+    }
+    
+    public int totalBuildingCount() {
+        int result = 0;
+        foreach(var kvp in this.buildings) {
+            result += kvp.Value.Count;
+        }
+        return result;
+    }
+
+    public int totalWorkerCount() {
+        int result = 0;
+        foreach (var kvp in this.buildings) {
+            foreach(IBuilding b in kvp.Value) {
+                result += b.currentWorkers();
+            }
+        }
+        return result;
     }
     #endregion
 
@@ -203,7 +280,9 @@ public class BuildingGS {
 
     public bool canBuyBuilding(IBuilding possibleBuilding) {
         // TODO: in the future, buildings may cost differently depending on where they're built etc.
-        bool result = canAffordBuilding(possibleBuilding.getBuildingType());
+        bool result =  canAffordBuilding(possibleBuilding.getBuildingType());  // Stockpile considerations
+        result      &= canAffordUpkeep(possibleBuilding);  // per tick upkeep considerations
+
         PositionDependentBuilding posBuilding = possibleBuilding as PositionDependentBuilding;
         if (posBuilding != null) {
             // Can the provided building be built in this game state? 
@@ -358,7 +437,7 @@ public class BuildingGS {
 
         if (addTo) { this.resourceStockpile[rt] += change; }
         else       {
-            this.resourceStockpile[rt] -= change;
+            this.resourceStockpile[rt] = Mathf.Max(0, this.resourceStockpile[rt] - change);
             this.resourcesSpent += change;
         }
     }
@@ -368,7 +447,7 @@ public class BuildingGS {
         if (!this.resourceChangePerTick.ContainsKey(rt))
         { this.resourceChangePerTick[rt] = 0; }
 
-        this.resourceChangePerTick[rt] += addition;
+        this.resourceChangePerTick[rt] = Mathf.Max(0, this.resourceChangePerTick[rt] + addition);
     }
 
     public void setStockpile(ResourceType rt, int newCount) {
@@ -404,6 +483,11 @@ public class BuildingGS {
         // TODO: Consider number of buildings an important field
         // TODO: Consider adding "free-land remaining" to this hash
         int hash = 17;
+
+        // Set up the resource change per tick values. 
+        // This ensures no "resourceStockpile was modified during loop" error
+        if (!validRPT) { buildCPT(); }
+
         foreach (KeyValuePair<ResourceType, int> kvp in this.resourceStockpile) {
             int resourceChangePerTick = this.getChangePerTick(kvp.Key);
             hash = (hash * 23) + Convert.ToInt32(kvp.Key);

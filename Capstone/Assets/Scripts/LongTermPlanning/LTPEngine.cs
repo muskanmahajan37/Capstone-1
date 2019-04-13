@@ -11,7 +11,7 @@ public static class LTPEngine {
      * Increasing this number may cause substantial lag,
      * decreasing this number may take longer real world time to calculate a path
      */
-    private static readonly int NODES_CHECKED_PER_YIELD = 200; // Check 1 nodes every frame
+    private static readonly int NODES_CHECKED_PER_YIELD = 1; // Check n nodes every frame
 
 
     public static IEnumerator BuildPlan(BuildingGS initialGS,
@@ -38,11 +38,12 @@ public static class LTPEngine {
                 yield return null;
             }
             totalChecks++;
-            QGameState qe = priorityQueue.DequeueValue();
+            KeyValuePair<QPriority, QGameState> kvp = priorityQueue.Dequeue();
+            QGameState qe = kvp.Value;
 
-            //Debug.Log("============================================");
-            //Debug.Log("Cost to get here: " + qe.costToGetHere);
-            //Debug.Log("incoming work: " + qe.transitionWork.workType + "  " + qe.transitionWork.buildingType);
+            Debug.Log("===============================================================================================");
+            Debug.Log("Cost to get here: " + qe.costToGetHere + " + " + kvp.Key.maxWaitTime);
+            Debug.Log("incoming work: " + qe.transitionWork.workType + "  " + qe.transitionWork.buildingType);
 
             // Early exit conditions
             if (LTPHelper.estematedRemainingDistance(qe.gameState, targetGS).atTarget()) {
@@ -77,16 +78,21 @@ public static class LTPEngine {
                 }
 
                 QPriority heuristic = new QPriority(neighbor, targetGS);
-
-                //Debug.Log("********************");
-                //Debug.Log("**  Adding neighbor: ");
-                //Debug.Log("**  transition work: " + neighbor.transitionWork.workType + "  " + neighbor.transitionWork.buildingType);
-                //Debug.Log(" +  infinities     : " + heuristic.numberOfInfinities);
-                //Debug.Log(" +  unaquiriable   : " + heuristic.unaquirableResourceCount);
-                //Debug.Log(" +  maxWaitTime    : " + heuristic.maxWaitTime);
-                //Debug.Log(" +  totalCPTDelta  : " + heuristic.totalCPTDelta);
-                //Debug.Log(" +  fudge factor   : " + heuristic.totalResourcesSpent);
-
+                
+                Debug.Log("********************");
+                Debug.Log("**  Adding neighbor: ");
+                Debug.Log("**  transition work: " + neighbor.transitionWork.workType + "  " + neighbor.transitionWork.buildingType);
+                Debug.Log(" +  infinities     : " + heuristic.numberOfInfinities);
+                Debug.Log(" +  unaquiriable   : " + heuristic.unaquirableResourceCount);
+                Debug.Log(" +  totalCPTDelta  : " + heuristic.totalCPTDelta);
+                Debug.Log(" +  best CPTDelta  : " + heuristic.bestCPTDelta);
+                Debug.Log(" +  estTotalDist   : " + heuristic.estTotalDist);
+                Debug.Log(" +  fudge factor   : " + heuristic.totalResourcesSpent);
+                Debug.Log("iron  cpt: " + neighbor.gameState.getChangePerTick(ResourceType.Iron));
+                Debug.Log("coal  cpt: " + neighbor.gameState.getChangePerTick(ResourceType.Coal));
+                Debug.Log("Steel cpt: " + neighbor.gameState.getChangePerTick(ResourceType.Steel));
+                Debug.Log("building count: " + neighbor.gameState.totalBuildingCount());
+                Debug.Log("worker count: " + neighbor.gameState.totalWorkerCount());
 
                 priorityQueue.Enqueue(heuristic, neighbor);
             } // End foreach neighbor

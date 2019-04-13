@@ -58,6 +58,14 @@ public class MultiResourceBuilding : IBuilding {
         }
         return result;
     }
+    
+    public List<ResourceChange> bestPossibleOutputResourceProduction() {
+        List<ResourceChange> result = new List<ResourceChange>();
+        foreach (IResourceProducer producer in BuildingFactory.allBluePrints[this.bt].outputResourceProduction) {
+            result.Add(producer.simulate(this.maxWorkerCount));
+        }
+        return result;
+    }
 
     public List<ResourceType> inputResources() {
         List<ResourceType> result = new List<ResourceType>();
