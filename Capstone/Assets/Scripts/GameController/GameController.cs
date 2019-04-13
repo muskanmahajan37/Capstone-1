@@ -37,7 +37,7 @@ public class GameController : MonoBehaviour
         if (singleton == null) { singleton = this; }
         else if (singleton.Equals(this)) { return; }
         else {
-            // Else the singleton already exist AND this boject isn't it
+            // Else the singleton already exist AND this object isn't it
             // There can only be one...
             GameObject.Destroy(this);
         }
