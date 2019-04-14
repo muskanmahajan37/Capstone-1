@@ -26,6 +26,7 @@ public interface IBuilding  {
 
     List<ResourceType> outputResources();
     List<ResourceChange> outputResourceProduction();
+    List<ResourceChange> bestPossibleOutputResourceProduction();
 
     List<ResourceType> inputResources();
     List<ResourceChange> inputResourceCost();
@@ -138,6 +139,14 @@ public class SimpleBuilding : IBuilding {
         List<ResourceChange> result = new List<ResourceChange>();
         foreach (IResourceProducer producer in BuildingFactory.allBluePrints[this.bt].outputResourceProduction) {
             result.Add(producer.simulate(this.currentPop));
+        }
+        return result;
+    }
+
+    public List<ResourceChange> bestPossibleOutputResourceProduction() {
+        List<ResourceChange> result = new List<ResourceChange>();
+        foreach(IResourceProducer producer in BuildingFactory.allBluePrints[this.bt].outputResourceProduction) {
+            result.Add(producer.simulate(this.maxPop));
         }
         return result;
     }

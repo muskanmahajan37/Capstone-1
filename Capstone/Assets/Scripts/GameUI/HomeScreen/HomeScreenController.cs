@@ -2,59 +2,71 @@
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class HomeScreenController : MonoBehaviour
 {
-    private AIPersonalityType aIPersonality;
-    private CampaignType campaignType;
+
+    public CampaignTypeButton campaignButtonPrefab;
+    public AiPersonalityButton personalityButtonPrefab;
+
+    public GameObject campaignButtonHolder;
+    public GameObject personalityButtonHolder;
+
+    public AIPersonalityType aIPersonality;
+    public CampaignType campaignType;
 
     public List<CampaignTypeButton> campaignTypeButtons;
     public List<AiPersonalityButton> aiPersonalityTypeButtons;
     public Button startGameButton;
 
     // Start is called before the first frame update
-    void Start()
-    {
+    void Start() {
         foreach (CampaignType campaign in Enum.GetValues(typeof(CampaignType))) {
-            campaignTypeButtons.Add(new CampaignTypeButton(campaign));
+            CampaignTypeButton button = Instantiate<CampaignTypeButton>(campaignButtonPrefab);
+            button.setup(campaign, this);
+            campaignTypeButtons.Add(button);
+            button.transform.SetParent(campaignButtonHolder.transform);
         }
-        foreach (AIPersonalityType personality in Enum.GetValues(typeof(AIPersonalityType)))
-        {
-            aiPersonalityTypeButtons.Add(new AiPersonalityButton(personality));
+
+        foreach (AIPersonalityType personality in Enum.GetValues(typeof(AIPersonalityType))) {
+            AiPersonalityButton button = Instantiate<AiPersonalityButton>(personalityButtonPrefab);
+            button.setup(personality, this);
+            aiPersonalityTypeButtons.Add(button);
+            button.transform.SetParent(personalityButtonHolder.transform);
         }
+
         startGameButton.onClick.AddListener(delegate { startGame(); });
     }
 
-    private void startGame()
-    {
+    private void startGame() {
         startGameButton.interactable = false;
         God.campaignType = campaignType;
         God.aiPersonality = aIPersonality;
         God.longTermPlanner = LongTermPlannerType.MemoryBound;
-        new God().startGame();
+
+        // Move to next scene
+        SceneManager.LoadScene("SampleScene");
+    }
+    
+
+    public void updatePersonality(AiPersonalityButton personalityButton) {
+        this.aIPersonality = personalityButton.value;
+        foreach(AiPersonalityButton b in this.aiPersonalityTypeButtons) {
+            b.forceTurnOn();
+        }
+        personalityButton.forceTurnOff();
     }
 
-    public void setPersonality(AIPersonalityType value)
-    {
-        this.aIPersonality = value;
+    public void updateCampaignType(CampaignTypeButton campaignButton) {
+        this.campaignType = campaignButton.value;
+        foreach (CampaignTypeButton b in this.campaignTypeButtons) {
+            b.forceTurnOn();
+        }
+        campaignButton.forceTurnOff();
     }
 
-    public AIPersonalityType getPersonality()
-    {
-        return this.aIPersonality;
-    }
-
-    public void setCampaignType(CampaignType value)
-    {
-        this.campaignType = value;
-    }
-
-    public CampaignType getCampaignType()
-    {
-        return this.campaignType;
-    }
 
 
 }

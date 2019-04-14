@@ -34,6 +34,7 @@ public class PositionDependentBuilding : MultiResourceBuilding {
     #endregion
 
     public bool canBuild(BuildingGS gameState) {
+        // Can this building be built in the provided game state? 
         return getRelevantResourceNodes(gameState).Count > 0;
     }
 
@@ -53,12 +54,12 @@ public class PositionDependentBuilding : MultiResourceBuilding {
 
     #region Utility
     private List<IResourceNode> getRelevantResourceNodes(BuildingGS gameState) {
+        // How many un-claimed nodes that produce this.outputResources() exist in the map? 
         List<IResourceNode> result = new List<IResourceNode>();
         foreach (ResourceType rt in base.outputResources()) {
             result.AddRange(gameState.getResourceNodes(this.pos, rt));
         }
         return result;
-
     }
 
     private List<IResourceNode> getRelevantResourceNodes() { return getRelevantResourceNodes(this.gameState); }

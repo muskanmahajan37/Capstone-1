@@ -16,9 +16,10 @@ public class QPriority : IComparable {
     public int numberOfInfinities { get { return distanceRuler.NumberOfInfinities; } }
     public int maxWaitTime        { get { return distanceRuler.MaxWaitTime; } }
     public int totalWaitTime      { get { return distanceRuler.TotalWaitTime; } }
-    public int totalCPTDelta      { get { return distanceRuler.TotalWaitTime; } }
+    public int totalCPTDelta      { get { return distanceRuler.TotalChangePerTickDelta; } }
+    public int bestCPTDelta       { get { return distanceRuler.BestChangePerTickDelta; } }
 
-    public int estTotalDist        { get { return this.costToGetHere + this.maxWaitTime; } }
+    public int estTotalDist       { get { return this.costToGetHere + this.maxWaitTime; } }
 
 
 
@@ -48,9 +49,14 @@ public class QPriority : IComparable {
         if (this.unaquirableResourceCount != other.unaquirableResourceCount)
             { return this.unaquirableResourceCount - other.unaquirableResourceCount; }
         if (this.estTotalDist != other.estTotalDist)
+            // This stays here because there are an infinite number of game states
+            // that seem close, but require a step away from the goal to buy a new building
             { return this.estTotalDist - other.estTotalDist; }
+
         if (this.totalCPTDelta != other.totalCPTDelta)
             { return this.totalCPTDelta - other.totalCPTDelta; }
+        if (this.bestCPTDelta != other.bestCPTDelta)
+            { return this.bestCPTDelta - other.bestCPTDelta; }
 
         // All things equal go for the cheaper option
         return this.totalResourcesSpent - other.totalResourcesSpent;
