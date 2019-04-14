@@ -21,11 +21,12 @@ public static class LTPEngine {
         int nodesChecked = 0;
         // Initialize data structures
         Dictionary<int, int> bestCostToGetHere = new Dictionary<int, int>();
+        HiddenRequirement hiddenReq = new HiddenRequirement();
 
         // NOTE: Don't add the initial state to the bestCostToGetHere, that will be done automatically
         Work initialWork = new Work(EWork.EMPTY, BuildingType.NONE, 0);
         QGameState firstGS = new QGameState(initialGS, null, initialWork, 0);
-        QPriority firstPriority = new QPriority(firstGS, targetGS);
+        QPriority firstPriority = new QPriority(firstGS, targetGS, hiddenReq);
         priorityQueue.Enqueue(firstPriority, firstGS);
 
 
@@ -41,19 +42,33 @@ public static class LTPEngine {
             KeyValuePair<QPriority, QGameState> kvp = priorityQueue.Dequeue();
             QGameState qe = kvp.Value;
 
-            //Debug.Log("===============================================================================================");
-            //Debug.Log("Cost to get here: " + qe.costToGetHere + " + " + kvp.Key.maxWaitTime);
-            //Debug.Log("incoming work: " + qe.transitionWork.workType + "  " + qe.transitionWork.buildingType);
+            if (false) {
+                Debug.Log("===============================================================================================");
+                Debug.Log("Cost to get here: " + qe.costToGetHere + " + " + kvp.Key.maxWaitTime);
+                Debug.Log("incoming work: " + qe.transitionWork.workType + "  " + qe.transitionWork.buildingType);
+                
+                Debug.Log(" +  infinities     : " + kvp.Key.numberOfInfinities);
+                Debug.Log(" +  unaquiriable   : " + kvp.Key.unaquirableResourceCount);
+                //Debug.Log(" +  estTotalDist   : " + kvp.Key.estTotalDist);
+                Debug.Log(" +  BestTotalDist  : " + kvp.Key.bestMaxWaitTime);
+                Debug.Log(" +  totalCPTDelta  : " + kvp.Key.totalCPTDelta);
+                Debug.Log(" +  preRecDelta    : " + kvp.Key.reccomendedPreRecDelta);
+                //Debug.Log(" +  best CPTDelta  : " + heuristic.bestCPTDelta);
+                Debug.Log(" +  fudge factor   : " + kvp.Key.totalResourcesSpent);
+                Debug.Log("iron  cpt: " + qe.gameState.getChangePerTick(ResourceType.Iron));
+                Debug.Log("coal  cpt: " + qe.gameState.getChangePerTick(ResourceType.Coal));
+                Debug.Log("Steel cpt: " + qe.gameState.getChangePerTick(ResourceType.Steel));
+                Debug.Log("building count: " + qe.gameState.totalBuildingCount());
+                Debug.Log("worker count: " + qe.gameState.totalWorkerCount());
+            }
 
             // Early exit conditions
             if (LTPHelper.estematedRemainingDistance(qe.gameState, targetGS).atTarget()) {
                 // If we are 0 distance away from the target game state
                 // IE: If we have found the target game state
-                Debug.Log("Nocab flag 1");
                 finishCallback(qe);
                 yield break;
             } else if (totalChecks > LTPHelper.MAX_DEPTH) {
-                Debug.Log("Nocab flag 2");
                 finishCallback(null);
                 yield break;
             }
@@ -77,7 +92,7 @@ public static class LTPEngine {
                     continue;
                 }
 
-                QPriority heuristic = new QPriority(neighbor, targetGS);
+                QPriority heuristic = new QPriority(neighbor, targetGS, hiddenReq);
 
 
 
@@ -88,9 +103,11 @@ public static class LTPEngine {
                     Debug.Log("**  transition work: " + neighbor.transitionWork.workType + "  " + neighbor.transitionWork.buildingType);
                     Debug.Log(" +  infinities     : " + heuristic.numberOfInfinities);
                     Debug.Log(" +  unaquiriable   : " + heuristic.unaquirableResourceCount);
-                    Debug.Log(" +  estTotalDist   : " + heuristic.estTotalDist);
+                    //Debug.Log(" +  estTotalDist   : " + kvp.Key.estTotalDist);
+                    Debug.Log(" +  BestTotalDist  : " + kvp.Key.bestMaxWaitTime);
                     Debug.Log(" +  totalCPTDelta  : " + heuristic.totalCPTDelta);
-                    Debug.Log(" +  best CPTDelta  : " + heuristic.bestCPTDelta);
+                    Debug.Log(" +  preRecDelta    : " + heuristic.reccomendedPreRecDelta);
+                    //Debug.Log(" +  best CPTDelta  : " + heuristic.bestCPTDelta);
                     Debug.Log(" +  fudge factor   : " + heuristic.totalResourcesSpent);
                     Debug.Log("iron  cpt: " + neighbor.gameState.getChangePerTick(ResourceType.Iron));
                     Debug.Log("coal  cpt: " + neighbor.gameState.getChangePerTick(ResourceType.Coal));
@@ -104,8 +121,7 @@ public static class LTPEngine {
                 priorityQueue.Enqueue(heuristic, neighbor);
             } // End foreach neighbor
         } // End while queue is NOT empty
-
-        Debug.Log("Nocab flag 3");
+        
         finishCallback(null);
         yield break;
     }

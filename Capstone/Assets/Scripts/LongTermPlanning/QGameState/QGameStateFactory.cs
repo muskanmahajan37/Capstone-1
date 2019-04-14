@@ -24,10 +24,10 @@ public static class QGameStateFactory {
 
 
     public static QGameState buyWorker(QGameState qGS, BuildingType bt) {
-        BuildingGS newGameState = waitGameState(qGS.gameState, 3);  // TODO: We currently think a worker takes 0 ticks to build and assign
+        BuildingGS newGameState = waitGameState(qGS.gameState, 3);
         newGameState.buyAndAssignWorker(bt);
 
-        int costToGetHere = qGS.costToGetHere + 3;   // TODO: Worker time currently = 1  :(
+        int costToGetHere = qGS.costToGetHere + 3;
         Work newWork = new Work(EWork.BuyAndAssignWorker, bt, 3);
 
         return new QGameState(newGameState, qGS, newWork, costToGetHere);

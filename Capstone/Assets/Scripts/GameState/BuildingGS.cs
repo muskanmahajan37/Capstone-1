@@ -308,7 +308,6 @@ public class BuildingGS {
         this.subtractFromStockpile(newBuilding.costToBuild());
     }
 
-
     public void forceAddBuilding(IBuilding newBuilding) {
         // Add the provided building to the collection
         // AND updates this game state's resourceChangePerTick accordingly

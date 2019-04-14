@@ -194,7 +194,7 @@ public static class BuildingFactory {
             maxPop: 3,
             buildCost: new List<ResourceChange>() {
                 new ResourceChange(ResourceType.Stone, 100),
-                new ResourceChange(ResourceType.Wood, 300),
+                new ResourceChange(ResourceType.Wood, 50),
                 new ResourceChange(ResourceType.Gold, 90)
             },
             timeToBuild: 5,
@@ -214,7 +214,7 @@ public static class BuildingFactory {
            buildCost: new List<ResourceChange>() {
                new ResourceChange(ResourceType.Gold, 80),
                new ResourceChange(ResourceType.Stone, 50),
-               new ResourceChange(ResourceType.Wood, 120)
+               new ResourceChange(ResourceType.Wood, 60)
            }, 
            timeToBuild: 6,
            outputResourceProduction: new List<IResourceProducer>() {
