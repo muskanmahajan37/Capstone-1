@@ -31,8 +31,31 @@ public class God : MonoBehaviour
         Debug.Log("God awoken!");
         Debug.Log(campaignType + ":" + aiPersonality);
         setStartGameState();
+    }
+
+    public void Start()
+    {
         setTargetGameStates();
         planNextTargetGsAi();
+    }
+
+    private void doNextWorkAi()
+    {
+        if (aiCurrentPlan.Count > 0)
+        {
+            Work nextAiWork = aiCurrentPlan.Pop();
+            Debug.Log("Next work: " + nextAiWork.workType);
+            doWork(nextAiWork);
+        }
+        else
+        {
+            Debug.Log("No next work.");
+            if (isTargetReached(indexAi))
+            {
+                targetReached(indexAi);
+            }
+            else { Debug.Log("AI lost its way. Done all work, yet target not reached"); }
+        }
     }
 
     private void planNextTargetGsAi()
@@ -51,6 +74,7 @@ public class God : MonoBehaviour
     {
         Debug.Log("Path found");
         this.aiCurrentPlan = result;
+        doNextWorkAi();
         return true;
     }
 
@@ -149,19 +173,6 @@ public class God : MonoBehaviour
     private void tick()
     {
         aiCurrentGameState.timePasses(1);
-        Work nextAiWork = aiCurrentPlan.Pop();
-        if (nextAiWork != null)
-        {
-            doWork(nextAiWork);
-        }
-        else
-        {
-            if (isTargetReached(indexAi))
-            {
-                targetReached(indexAi);
-            }
-            else { Debug.Log("AI lost its way. Done all work, yet target not reached"); }
-        }
         if (isTargetReached(indexHuman))
         {
             targetReached(indexHuman);
@@ -236,6 +247,13 @@ public class God : MonoBehaviour
 
     private void doWork(Work nextAiWork)
     {
+        Debug.Log("Updating ai resource display");
+        foreach (ResourceType rt in aiCurrentGameState.getAllResourceTypes())
+        {
+            Debug.Log("RT: " + rt + ", " + aiCurrentGameState.getStockpile(rt));
+            aiResourceDisplay.updateCountAndRPT(rt, aiCurrentGameState.getStockpile(rt), aiCurrentGameState.getChangePerTick(rt));
+        }
+        Debug.Log("Doing next work");
         switch (nextAiWork.workType)
         {
             case EWork.BuildBuilding:
@@ -246,9 +264,19 @@ public class God : MonoBehaviour
                     aiCurrentGameState.buyAndAssignWorker(nextAiWork.buildingType);
                 };
                 break;
+            case EWork.Wait:
+                StartCoroutine(aiWait(nextAiWork.frameWait));
+                break;
             default:
+                doNextWorkAi();
                 break;
         }
+    }
+
+    private IEnumerator aiWait(int frameWait)
+    {
+        yield return new WaitForSeconds(frameWait * GameSetup.TICK_LENGHT_SEC);
+        doNextWorkAi();
     }
 
     public void startBuildBuilding(IBuilding newBuilding, int frameWait)
@@ -276,7 +304,7 @@ public class God : MonoBehaviour
 
         // Display the new resource stockpiles/ income per turn
         displayBuildingResouceDelta(newBuilding);
-
+        doNextWorkAi();
     }
 
     private void displayBuildingResouceDelta(IBuilding newBuiding)
