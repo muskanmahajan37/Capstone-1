@@ -18,7 +18,7 @@ public class ResourceDisplayController : MonoBehaviour {
     private int busyWorkers = 0;
     
     // Start is called before the first frame update
-    void Start() {
+    void Awake() {
         textBoxes = new Dictionary<ResourceType, ResourceText>();
     }
     
