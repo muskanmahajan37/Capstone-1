@@ -62,7 +62,7 @@ public class GameController : MonoBehaviour
 
     private float lastGameTick = 0;
     private void Update() {
-        if (Time.time - lastGameTick > GameSetup.TICK_LENGHT_SEC) {
+        if ((Time.time - lastGameTick) > GameSetup.TICK_LENGHT_SEC) {
             // If it's been a while since our last game tick
             // Propogate an "in game tick"
 
@@ -104,6 +104,10 @@ public class GameController : MonoBehaviour
     }
 
     public void startBuildBuilding(IBuilding newBuilding) {
+        // Spend the cash money 
+        // NOTE: validation is done at button click time
+        this.gameState.spendForBuilding(newBuilding);
+
         // Start the construction process of this new building
         StartCoroutine(waitForConstruction(newBuilding));
     }
@@ -121,7 +125,8 @@ public class GameController : MonoBehaviour
         occupyBuildingSpace(newBuilding);
 
         // Give the building to the resource manager logic
-        this.gameState.buyBuilding(newBuilding);
+        // We've already spent for the building in the "startBuildBuilding" func
+        this.gameState.forceAddBuilding(newBuilding);
 
         // Display the new resource stockpiles/ income per turn
         displayBuildingResouceDelta(newBuilding);

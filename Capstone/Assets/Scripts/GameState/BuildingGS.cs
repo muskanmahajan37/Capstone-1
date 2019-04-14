@@ -123,7 +123,7 @@ public class BuildingGS {
 
     public int getBestPossibleChangePerTick(ResourceType rt) {
         if (!this.bestPossibleChangePerTick.ContainsKey(rt)) { return 0; }
-        return this.resourceChangePerTick[rt];
+        return this.bestPossibleChangePerTick[rt];
     }
 
     private void buildCPT() {
@@ -290,17 +290,24 @@ public class BuildingGS {
         }
         return result;
     }
-
+    
     public void buyBuilding(IBuilding newBuilding) {
         // Note this function does no validation checking.
         // IE: going negative is ok, so a check must be made before calling this function
-        
+
         // First, change the stockpiles accordingly by subtracting the cost of the building
-        this.subtractFromStockpile(newBuilding.costToBuild());
+        this.spendForBuilding(newBuilding);
 
         // Then add the building and it's resource per tick count to this game state
         this.forceAddBuilding(newBuilding);
     }
+
+    public void spendForBuilding(IBuilding newBuilding) {
+        // Spend the money on the new building
+        // No validation checking is done
+        this.subtractFromStockpile(newBuilding.costToBuild());
+    }
+
 
     public void forceAddBuilding(IBuilding newBuilding) {
         // Add the provided building to the collection

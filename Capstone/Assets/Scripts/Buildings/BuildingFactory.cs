@@ -95,7 +95,10 @@ public static class BuildingFactory {
         return new MultiResourceBuilding(BuildingType.SteelSmith, new Vector2Int(x, y));
     }
     #endregion
-    
+
+    public static TileBase coalMineTile;
+    public static TileBase ironMineTile;
+
     public static readonly List<BuildingType> allBuildings = new List<BuildingType>() {
         BuildingType.Bank,
         BuildingType.StoneMason,
@@ -114,6 +117,8 @@ public static class BuildingFactory {
             case BuildingType.WoodCutter: return woodCutterTile;
 
             case BuildingType.SilverMine: return silverMineTile;
+            case BuildingType.CoalMine: return coalMineTile;
+            case BuildingType.IronMine: return ironMineTile;
             case BuildingType.SteelSmith: return steelBlacksmithTile;
             case BuildingType.NONE:
             default:
