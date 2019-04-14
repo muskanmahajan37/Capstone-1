@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class God
+public class God : MonoBehaviour
 {
     private float lastGameTick = 0;
 
@@ -23,7 +23,7 @@ public class God
 
     private Stack<Work> aiCurrentPlan;
 
-    public void startGame()
+    public void Awake()
     {
         setStartGameState();
         setTargetGameStates();
@@ -32,7 +32,7 @@ public class God
     }
 
     private void executeNextTargetGsAi()
-    {
+    { 
         BuildingGS initialGs = this.currentGameStates[indexAi];
         BuildingGS targetGs = modifyGameStateForPersonality(this.targetGameStates[currentTargetGsIndex[indexAi]], aiPersonality);
         ltpPlan(initialGs, targetGs);
@@ -112,6 +112,28 @@ public class God
         targetGs.setStockpile(ResourceType.Silver, 200);
         targetGs.addResourcePerTick(ResourceType.Silver, 9);
         targetGameStates.Add(targetGs);
+
+        BuildingGS targetGs2 = new BuildingGS();
+        targetGs2.setStockpile(ResourceType.Gold, 4000);
+        targetGs2.addResourcePerTick(ResourceType.Gold, 10);
+        targetGs2.setStockpile(ResourceType.Stone, 4000);
+        targetGs2.addResourcePerTick(ResourceType.Stone, 5);
+        targetGs2.setStockpile(ResourceType.Wood, 4000);
+        targetGs2.addResourcePerTick(ResourceType.Wood, 6);
+        targetGs2.setStockpile(ResourceType.Silver, 400);
+        targetGs2.addResourcePerTick(ResourceType.Silver, 9);
+        targetGameStates.Add(targetGs2);
+
+        BuildingGS targetGs3 = new BuildingGS();
+        targetGs3.setStockpile(ResourceType.Gold, 8000);
+        targetGs3.addResourcePerTick(ResourceType.Gold, 20);
+        targetGs3.setStockpile(ResourceType.Stone, 8000);
+        targetGs3.addResourcePerTick(ResourceType.Stone, 20);
+        targetGs3.setStockpile(ResourceType.Wood, 8000);
+        targetGs3.addResourcePerTick(ResourceType.Wood, 20);
+        targetGs3.setStockpile(ResourceType.Silver, 800);
+        targetGs3.addResourcePerTick(ResourceType.Silver, 20);
+        targetGameStates.Add(targetGs3);
     }
 
     private void Update()
