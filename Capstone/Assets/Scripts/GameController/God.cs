@@ -253,7 +253,7 @@ public class God : MonoBehaviour
             Debug.Log("RT: " + rt + ", " + aiCurrentGameState.getStockpile(rt));
             aiResourceDisplay.updateCountAndRPT(rt, aiCurrentGameState.getStockpile(rt), aiCurrentGameState.getChangePerTick(rt));
         }
-        Debug.Log("Doing next work");
+        Debug.Log("Doing work: " + nextAiWork.workType);
         switch (nextAiWork.workType)
         {
             case EWork.BuildBuilding:
@@ -262,6 +262,7 @@ public class God : MonoBehaviour
             case EWork.BuyAndAssignWorker:
                 if (aiCurrentGameState.canBuyWorker()) {
                     aiCurrentGameState.buyAndAssignWorker(nextAiWork.buildingType);
+                    aiResourceDisplay.addTotalWorker();
                 };
                 break;
             case EWork.Wait:
