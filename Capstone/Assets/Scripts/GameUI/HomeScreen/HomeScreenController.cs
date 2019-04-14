@@ -44,7 +44,6 @@ public class HomeScreenController : MonoBehaviour
         startGameButton.interactable = false;
         God.campaignType = campaignType;
         God.aiPersonality = aIPersonality;
-        God.longTermPlanner = LongTermPlannerType.MemoryBound;
 
         // Move to next scene
         SceneManager.LoadScene("SampleScene");

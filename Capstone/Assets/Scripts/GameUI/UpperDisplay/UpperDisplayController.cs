@@ -31,6 +31,7 @@ public class UpperDisplayController : MonoBehaviour {
         resourceDisplay.gameObject.SetActive(false);
         targetDisplay.gameObject.SetActive(false);
         aiDisplay.gameObject.SetActive(false);
+        aiTargetDisplay.gameObject.SetActive(false);
     }
 
     private void showDisplay(GameObject activeDisplay, string name) {
