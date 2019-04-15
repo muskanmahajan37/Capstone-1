@@ -8,7 +8,7 @@ public class ResourceDisplayController : MonoBehaviour {
 
     public ResourceText textPrefab;
     public GameObject textContainer;
-    private static Dictionary<ResourceType, ResourceText> textBoxes;
+    private  Dictionary<ResourceType, ResourceText> textBoxes;
 
     public Text tickText;
     private int tickCount = 0;
