@@ -2,13 +2,14 @@
 using System.Collections.Generic;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class God : MonoBehaviour
 {
     private float lastGameTick = 0;
 
     public ResourceDisplayController meTargetDisplay, aiResourceDisplay, aiTargetDisplay;
-
+    public Text targetReachedText;
     public static CampaignType campaignType = CampaignType.Normal;
     public static AIPersonalityType aiPersonality = AIPersonalityType.Conservative;
     public ALongTermPlanner planner;
@@ -25,6 +26,9 @@ public class God : MonoBehaviour
     private int[] currentTargetGsIndex = new int[noOfActors];
 
     private Stack<Work> aiCurrentPlan;
+
+    private int bank, stone, wood, silver;
+    private Boolean targetReachedBoolAi = false;
 
     public void Awake()
     {
@@ -54,7 +58,7 @@ public class God : MonoBehaviour
             {
                 targetReached(indexAi);
             }
-            else { Debug.Log("AI lost its way. Done all work, yet target not reached"); }
+            else { Debug.Log("Done all work, yet target not reached"); }
         }
     }
 
@@ -173,10 +177,15 @@ public class God : MonoBehaviour
     private void tick()
     {
         aiCurrentGameState.timePasses(1);
-        if (isTargetReached(indexHuman))
+        for (int indexActor = 0; indexActor < noOfActors; indexActor++)
         {
-            targetReached(indexHuman);
+            if (isTargetReached(indexActor))
+            {
+                targetReached(indexActor);
+            }
         }
+        Debug.Log("Target reached bool: " + targetReachedBoolAi);
+        updateAiResourceDisplay();
     }
 
     private void targetReached(int indexActor)
@@ -203,14 +212,18 @@ public class God : MonoBehaviour
 
     private void declareGameWon(int indexActor)
     {
-        // TODO: Onscreen text?
         Debug.Log("Game won by player" + (indexActor + 1));
+        targetReachedText.text = "Game won by: " + (indexActor + 1);
     }
 
     private void celebrateTargetReached(int indexActor)
     {
-        // TODO: Onscreen text?
-        Debug.Log("Taget reached for player" + (indexActor + 1));
+        Debug.Log("Taget reached for player " + (indexActor + 1));
+        Debug.Log("Taget reached for player " + (indexActor + 1));
+        Debug.Log("Taget reached for player " + (indexActor + 1));
+        Debug.Log("Taget reached for player " + (indexActor + 1));
+        targetReachedText.text = "Target reached for: " + (indexActor + 1);
+        if (indexActor == indexAi) targetReachedBoolAi = true;
     }
 
     private bool isTargetReached(int indexActor)
@@ -227,7 +240,20 @@ public class God : MonoBehaviour
                 return false;
             }
         }
+        Debug.Log("Target reached for : " + indexActor);
         return true;
+    }
+
+    private void updateAiResourceDisplay()
+    {
+        Debug.Log("Updating ai resource display");
+        Debug.Log(bank + ", " + stone + ", " + wood + ", " + silver);
+        foreach (ResourceType rt in aiCurrentGameState.getAllResourceTypes())
+        {
+            //Debug.Log("update: " + rt + ", " + aiCurrentGameState.getStockpile(rt));
+            aiResourceDisplay.updateCountAndRPT(rt, aiCurrentGameState.getStockpile(rt), aiCurrentGameState.getChangePerTick(rt));
+        }
+        aiResourceDisplay.updateWorkers();
     }
 
     private void updateTargetDisplay(BuildingGS gameState, int indexActor)
@@ -247,12 +273,12 @@ public class God : MonoBehaviour
 
     private void doWork(Work nextAiWork)
     {
-        Debug.Log("Updating ai resource display");
-        foreach (ResourceType rt in aiCurrentGameState.getAllResourceTypes())
-        {
-            Debug.Log("RT: " + rt + ", " + aiCurrentGameState.getStockpile(rt));
-            aiResourceDisplay.updateCountAndRPT(rt, aiCurrentGameState.getStockpile(rt), aiCurrentGameState.getChangePerTick(rt));
-        }
+        //Debug.Log("Updating ai resource display");
+        //foreach (ResourceType rt in aiCurrentGameState.getAllResourceTypes())
+        //{
+        //    Debug.Log("RT: " + rt + ", " + aiCurrentGameState.getStockpile(rt));
+        //    aiResourceDisplay.updateCountAndRPT(rt, aiCurrentGameState.getStockpile(rt), aiCurrentGameState.getChangePerTick(rt));
+        //}
         Debug.Log("Doing work: " + nextAiWork.workType);
         switch (nextAiWork.workType)
         {
@@ -260,10 +286,35 @@ public class God : MonoBehaviour
                 startBuildBuilding(BuildingFactory.buildNew(nextAiWork.buildingType, -1, -1), nextAiWork.frameWait);
                 break;
             case EWork.BuyAndAssignWorker:
-                if (aiCurrentGameState.canBuyWorker()) {
+                Debug.Log("Worker for: " + nextAiWork.buildingType);
+                if (aiCurrentGameState.canBuyWorker())
+                {
+                    Debug.Log("can buy worker");
                     aiCurrentGameState.buyAndAssignWorker(nextAiWork.buildingType);
+                    aiResourceDisplay.workerAssigned();
                     aiResourceDisplay.addTotalWorker();
-                };
+
+                    switch (nextAiWork.buildingType)
+                    {
+                        case BuildingType.Bank:
+                            bank++;
+                            break;
+                        case BuildingType.SilverMine:
+                            silver++;
+                            break;
+                        case BuildingType.StoneMason:
+                            stone++;
+                            break;
+                        case BuildingType.WoodCutter:
+                            wood++;
+                            break;
+                    }
+                }
+                else
+                {
+                    Debug.Log("cannot buy worker");
+                }
+                doNextWorkAi();
                 break;
             case EWork.Wait:
                 StartCoroutine(aiWait(nextAiWork.frameWait));
