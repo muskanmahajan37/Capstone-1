@@ -11,24 +11,31 @@ public class MidLevelManager : MonoBehaviour {
     public void test() {
 
         BuildingGS initialGS = new BuildingGS();
-        initialGS.setStockpile(ResourceType.Gold, 1000);
+        initialGS.setStockpile(ResourceType.Gold, 100);
         initialGS.addResourcePerTick(ResourceType.Gold, 0);
-        initialGS.setStockpile(ResourceType.Stone, 1000);
+        initialGS.setStockpile(ResourceType.Stone, 100);
         initialGS.addResourcePerTick(ResourceType.Stone, 0);
-        initialGS.setStockpile(ResourceType.Wood, 1000);
+        initialGS.setStockpile(ResourceType.Wood, 100);
         initialGS.addResourcePerTick(ResourceType.Wood, 0);
 
 
         BuildingGS targetGS = new BuildingGS();
-        targetGS.setStockpile(ResourceType.Gold, 200);
-        targetGS.addResourcePerTick(ResourceType.Gold, 60);
-        targetGS.setStockpile(ResourceType.Stone, 200);
-        targetGS.addResourcePerTick(ResourceType.Stone, 30);
-        targetGS.setStockpile(ResourceType.Wood, 200);
-        targetGS.addResourcePerTick(ResourceType.Wood, 30);
-        targetGS.setStockpile(ResourceType.Silver, 200);
-        targetGS.addResourcePerTick(ResourceType.Silver, 30);
+        //targetGS.setStockpile(ResourceType.Gold, 500);
+        //targetGS.addResourcePerTick(ResourceType.Gold, 5);
+        //targetGS.setStockpile(ResourceType.Stone, 500);
+        //targetGS.addResourcePerTick(ResourceType.Stone, 5);
+        //targetGS.setStockpile(ResourceType.Wood, 500);
+        targetGS.addResourcePerTick(ResourceType.Wood, 16);
+        //targetGS.setStockpile(ResourceType.Silver, 500);
+        //targetGS.addResourcePerTick(ResourceType.Silver, 5);
+        //targetGS.setStockpile(ResourceType.Coal, 100);
+        //targetGS.addResourcePerTick(ResourceType.Coal, 16);
+        //targetGS.setStockpile(ResourceType.Iron, 100);
+        //targetGS.addResourcePerTick(ResourceType.Iron, 8);
+        //targetGS.setStockpile(ResourceType.Steel, 10);
+        targetGS.addResourcePerTick(ResourceType.Steel, 8);
 
+        Debug.Log("Testing");
         ltp.plan(initialGS, targetGS, callback);
     }
 

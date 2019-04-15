@@ -12,11 +12,11 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
     public void hillClimb() {
 
         BuildingGS initialGS = new BuildingGS();
-        initialGS.setStockpile(ResourceType.Gold, 9000000);
+        initialGS.setStockpile(ResourceType.Gold, 1000);
         initialGS.addResourcePerTick(ResourceType.Gold, 0);
-        initialGS.setStockpile(ResourceType.Stone, 9000000);
+        initialGS.setStockpile(ResourceType.Stone, 1000);
         initialGS.addResourcePerTick(ResourceType.Stone, 0);
-        initialGS.setStockpile(ResourceType.Wood, 9000000);
+        initialGS.setStockpile(ResourceType.Wood, 1000);
         initialGS.addResourcePerTick(ResourceType.Wood, 0);
 
 

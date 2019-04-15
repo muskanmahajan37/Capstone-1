@@ -79,9 +79,6 @@ public static class LTPHelper {
                 // If we can build this building, then add a branch
                 QGameState neighbor = QGameStateFactory.buyBuilding(qEntry, possibleBuilding);
                 result.Add(neighbor);
-
-                // For increased fidelity, each building time can also be a no-op
-                //waitTimes.Add(possibleBuilding.timeToBuild());
             }
         }
 
