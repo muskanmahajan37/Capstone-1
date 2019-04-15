@@ -9,8 +9,9 @@ public class Dwarf : MonoBehaviour {
 
     Tile currentTile;
 
-
-    private static float MOVEMENT_SPEED = 0.00005f; // How much time in seconds should the dwarf wait before moving to a new tile? 
+    // How much time in seconds should the dwarf wait before moving to a new tile?
+    // Can move n tiles per tick
+    private static float MOVEMENT_SPEED { get { return GameSetup.TICK_LENGHT_SEC / 10.0f; } } 
     private static Tilemap tileMap;
     private static TileBase selfPicture;
 

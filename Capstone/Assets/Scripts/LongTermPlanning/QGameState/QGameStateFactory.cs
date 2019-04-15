@@ -24,7 +24,7 @@ public static class QGameStateFactory {
 
 
     public static QGameState buyWorker(QGameState qGS, BuildingType bt) {
-        BuildingGS newGameState = waitGameState(qGS.gameState, 3);
+        BuildingGS newGameState = waitGameState(qGS.gameState, 1);
         newGameState.buyAndAssignWorker(bt);
 
         int costToGetHere = qGS.costToGetHere + 3;

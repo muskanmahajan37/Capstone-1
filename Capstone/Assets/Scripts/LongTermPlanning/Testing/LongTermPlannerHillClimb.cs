@@ -21,20 +21,20 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
 
 
         BuildingGS targetGS = new BuildingGS();
-        //targetGS.setStockpile(ResourceType.Gold, 500);
-        //targetGS.addResourcePerTick(ResourceType.Gold, 5);
-        //targetGS.setStockpile(ResourceType.Stone, 500);
-        //targetGS.addResourcePerTick(ResourceType.Stone, 5);
-        //targetGS.setStockpile(ResourceType.Wood, 500);
-        targetGS.addResourcePerTick(ResourceType.Wood, 16);
+        targetGS.setStockpile(ResourceType.Gold, 1000);
+        targetGS.addResourcePerTick(ResourceType.Gold, 5);
+        targetGS.setStockpile(ResourceType.Stone, 1000);
+        targetGS.addResourcePerTick(ResourceType.Stone, 5);
+        targetGS.setStockpile(ResourceType.Wood, 1000);
+        targetGS.addResourcePerTick(ResourceType.Wood, 5);
         //targetGS.setStockpile(ResourceType.Silver, 500);
-        //targetGS.addResourcePerTick(ResourceType.Silver, 5);
+        targetGS.addResourcePerTick(ResourceType.Silver, 5);
         //targetGS.setStockpile(ResourceType.Coal, 100);
-        //targetGS.addResourcePerTick(ResourceType.Coal, 16);
+        targetGS.addResourcePerTick(ResourceType.Coal, 5);
         //targetGS.setStockpile(ResourceType.Iron, 100);
-        //targetGS.addResourcePerTick(ResourceType.Iron, 8);
+        targetGS.addResourcePerTick(ResourceType.Iron, 5);
         //targetGS.setStockpile(ResourceType.Steel, 10);
-        targetGS.addResourcePerTick(ResourceType.Steel, 8);
+        targetGS.addResourcePerTick(ResourceType.Steel, 5);
 
         UnityEngine.Debug.Log(Stopwatch.Frequency);
         UnityEngine.Debug.Log("StartTime: " + Stopwatch.GetTimestamp());

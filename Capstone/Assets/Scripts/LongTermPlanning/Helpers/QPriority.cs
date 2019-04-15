@@ -31,6 +31,7 @@ public class QPriority : IComparable {
 
     public int estTotalDist       { get { return this.costToGetHere + this.maxWaitTime; } }
     public bool wait              { get { return currentNode.transitionWork.workType == EWork.Wait; } }
+    public bool assignWorker      { get { return currentNode.transitionWork.workType == EWork.BuyAndAssignWorker; } }
 
 
     public QPriority(QGameState node, BuildingGS targetGS, HiddenRequirement hiddenReq) {
@@ -93,12 +94,21 @@ public class QPriority : IComparable {
         if (this.unaquirableResourceCount != other.unaquirableResourceCount)
             { return this.unaquirableResourceCount - other.unaquirableResourceCount; }
         
-        if (this.bestMaxWaitTime != other.bestMaxWaitTime)
-            { return this.bestMaxWaitTime - other.bestMaxWaitTime; }
-
         if (this.totalCPTDelta != other.totalCPTDelta)
             { return this.totalCPTDelta - other.totalCPTDelta; }
         // Figure out which one has less "hidden" pre-recs that are unsatisfied
+        
+        if (this.estTotalDist != other.estTotalDist)
+            { return this.estTotalDist - other.estTotalDist; }
+
+        // When nothing seems to be different, a assigning a worker operation always wins
+        if (this.assignWorker != other.assignWorker) {
+            if (this.assignWorker) { return -1; }
+            else { return 1; }
+        }
+
+        if (this.bestMaxWaitTime != other.bestMaxWaitTime)
+            { return this.bestMaxWaitTime - other.bestMaxWaitTime; }
 
         if (reccomendedPreRecDelta != other.reccomendedPreRecDelta)
             { return reccomendedPreRecDelta - other.reccomendedPreRecDelta; }
@@ -106,13 +116,15 @@ public class QPriority : IComparable {
         //if (this.bestCPTDelta != other.bestCPTDelta)
         //    { return this.bestCPTDelta - other.bestCPTDelta; }
 
-        if (this.estTotalDist != other.estTotalDist)
-            { return this.estTotalDist - other.estTotalDist; }
+        int myTotalBuildingCount = this.currentNode.gameState.totalBuildingCount();
+        int otherTotalBuildingCount = other.currentNode.gameState.totalBuildingCount();
+        if (myTotalBuildingCount != otherTotalBuildingCount)
+            { return myTotalBuildingCount - otherTotalBuildingCount; }
 
-        // When nothing seems to be different, a wait operation always looses
+        // When nothing seems to be different, a wait operation always wins
         if (this.wait != other.wait) {
-            if (this.wait) { return 1; }
-            else { return -1; }
+            if (this.wait) { return -1; }
+            else { return 1; }
         }
 
         // All things equal go for the cheaper option

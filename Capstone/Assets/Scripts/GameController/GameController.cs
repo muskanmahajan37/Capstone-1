@@ -29,7 +29,6 @@ public class GameController : MonoBehaviour
     private Queue<Dwarf> freeWorkers = new Queue<Dwarf>();
 
     private void Awake() {
-        Debug.Log("GC awoken!");
         buildSingleton();
     }
 
@@ -45,7 +44,6 @@ public class GameController : MonoBehaviour
     }
 
     private void Start() {
-        Debug.Log("GC start!");
         this.mapController = MapController.singleton;
 
         this.buildingPositions = new Dictionary<Tile, IBuilding>();
@@ -82,6 +80,7 @@ public class GameController : MonoBehaviour
     }
 
     private void displayAllResourceCount() {
+        if (gameState == null) { Debug.Log("Null game state"); }
         foreach (ResourceType rt in gameState.getAllResourceTypes()) {
             this.resourceDisplay.updateResourceCount(rt, gameState.getStockpile(rt));
         }

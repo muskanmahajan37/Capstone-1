@@ -14,4 +14,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/HillClimbingScene.unity
     guid: e01f6c74de110d242b9afcd1443ea963
+  - enabled: 1
+    path: Assets/Scenes/SetUpAi.unity
+    guid: 6c8b2be1409ddb44b9dc49138f03709f
+  - enabled: 1
+    path: Assets/Scenes/AIControlled.unity
+    guid: 1205749ef297e664c8d9b083939474d3
   m_configObjects: {}

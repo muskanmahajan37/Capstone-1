@@ -211,6 +211,17 @@ public class BuildingGS {
         return (this.getAnyOpenBuilding(bt) != null);
     }
 
+    public int totalOpenSlots() {
+        int result = 0;
+        foreach(var kvp in openSpots) {
+            Queue<IBuilding> buildings = kvp.Value;
+            foreach(IBuilding b in buildings) {
+                result += b.openWorkerSlots();
+            }
+        }
+        return result;
+    }
+
     public IBuilding getAnyOpenBuilding(BuildingType bt) {
         // Get an instance of a building (of the provided type) that has an open slot, or null
         if (!this.openSpots.ContainsKey(bt)) { return null; } // No key, no slots
