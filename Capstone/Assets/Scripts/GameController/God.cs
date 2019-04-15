@@ -1,61 +1,72 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
-public class God
+public class God : MonoBehaviour
 {
     private float lastGameTick = 0;
 
-    public static CampaignType campaignType;
-    public static AIPersonalityType aiPersonality;
-    public static LongTermPlannerType longTermPlanner;
+    public ResourceDisplayController meTargetDisplay, aiResourceDisplay, aiTargetDisplay;
 
-    private readonly int noOfActors = 2;
+    public static CampaignType campaignType = CampaignType.Normal;
+    public static AIPersonalityType aiPersonality = AIPersonalityType.Conservative;
+    public ALongTermPlanner planner;
+
+    private static readonly int noOfActors = 2;
 
     private GameState[] gameStates;
     private static int indexHuman = 0;
     private static int indexAi = 1;
 
-    private List<BuildingGS> currentGameStates;
-    private List<BuildingGS> targetGameStates;
+    private BuildingGS aiCurrentGameState;
+    private List<BuildingGS> targetGameStates = new List<BuildingGS>();
 
-    private int[] currentTargetGsIndex;
+    private int[] currentTargetGsIndex = new int[noOfActors];
 
     private Stack<Work> aiCurrentPlan;
 
-    public void startGame()
+    public void Awake()
     {
+        Debug.Log("God awoken!");
+        Debug.Log(campaignType + ":" + aiPersonality);
         setStartGameState();
-        setTargetGameStates();
-        // TODO: Add display for current targets for both human and AI
-        executeNextTargetGsAi();
     }
 
-    private void executeNextTargetGsAi()
+    public void Start()
     {
-        BuildingGS initialGs = this.currentGameStates[indexAi];
+        setTargetGameStates();
+        planNextTargetGsAi();
+    }
+
+    private void doNextWorkAi()
+    {
+        if (aiCurrentPlan.Count > 0)
+        {
+            Work nextAiWork = aiCurrentPlan.Pop();
+            Debug.Log("Next work: " + nextAiWork.workType);
+            doWork(nextAiWork);
+        }
+        else
+        {
+            Debug.Log("No next work.");
+            if (isTargetReached(indexAi))
+            {
+                targetReached(indexAi);
+            }
+            else { Debug.Log("AI lost its way. Done all work, yet target not reached"); }
+        }
+    }
+
+    private void planNextTargetGsAi()
+    { 
         BuildingGS targetGs = modifyGameStateForPersonality(this.targetGameStates[currentTargetGsIndex[indexAi]], aiPersonality);
-        ltpPlan(initialGs, targetGs);
+        Debug.Log(aiCurrentGameState);
+        ltpPlan(aiCurrentGameState, targetGs);
     }
 
     private void ltpPlan(BuildingGS initialGs, BuildingGS targetGsAi)
     {
-        ALongTermPlanner planner;
-        switch (God.longTermPlanner)
-        {
-            case LongTermPlannerType.MemoryBound:
-                planner = new MemoryBoundedLongTermPlanner();
-                break;
-            case LongTermPlannerType.IterativeDeepening:
-                planner = new IterativeDeepiningLongTermPlanner();
-                break;
-            case LongTermPlannerType.Accordion:
-                planner = new AccordionLongTermPlanner();
-                break;
-            default:
-                planner = new MemoryBoundedLongTermPlanner();
-                break;
-        }
         planner.plan(initialGs, targetGsAi, planningCompleteCallBack);
     }
 
@@ -63,8 +74,7 @@ public class God
     {
         Debug.Log("Path found");
         this.aiCurrentPlan = result;
-        // TODO : Whole game is being run here. So, get current game state of AI 
-        // and pass it to the method as start game state
+        doNextWorkAi();
         return true;
     }
 
@@ -73,10 +83,14 @@ public class God
         switch (aiPersonality)
         {
             case AIPersonalityType.GoldDigger:
-                // TODO
+                targetGsHuman.setStockpile(ResourceType.Gold, targetGsHuman.getStockpile(ResourceType.Gold) * 2);
+                targetGsHuman.addResourcePerTick(ResourceType.Gold, targetGsHuman.getChangePerTick(ResourceType.Gold) * 2);
                 break;
             case AIPersonalityType.Pragmatist:
-                // TODO
+                foreach (ResourceType rt in targetGsHuman.getStockpileResourceTypes())
+                {
+                    targetGsHuman.setStockpile(rt, (int) (targetGsHuman.getStockpile(rt) * 1.3));
+                }
                 break;
             case AIPersonalityType.Warrior:
             case AIPersonalityType.ScienceGeek:
@@ -96,9 +110,11 @@ public class God
         initialGs.addResourcePerTick(ResourceType.Stone, 0);
         initialGs.setStockpile(ResourceType.Wood, 1000);
         initialGs.addResourcePerTick(ResourceType.Wood, 0);
-        this.currentGameStates[indexHuman] = initialGs;
-        this.currentGameStates[indexAi] = initialGs;
+
+        GameController.gameState = initialGs;
+        aiCurrentGameState = new BuildingGS(initialGs);
     }
+
 
     private void setTargetGameStates()
     {
@@ -112,6 +128,34 @@ public class God
         targetGs.setStockpile(ResourceType.Silver, 200);
         targetGs.addResourcePerTick(ResourceType.Silver, 9);
         targetGameStates.Add(targetGs);
+
+        BuildingGS targetGs2 = new BuildingGS();
+        targetGs2.setStockpile(ResourceType.Gold, 4000);
+        targetGs2.addResourcePerTick(ResourceType.Gold, 10);
+        targetGs2.setStockpile(ResourceType.Stone, 4000);
+        targetGs2.addResourcePerTick(ResourceType.Stone, 5);
+        targetGs2.setStockpile(ResourceType.Wood, 4000);
+        targetGs2.addResourcePerTick(ResourceType.Wood, 6);
+        targetGs2.setStockpile(ResourceType.Silver, 400);
+        targetGs2.addResourcePerTick(ResourceType.Silver, 9);
+        targetGameStates.Add(targetGs2);
+
+        BuildingGS targetGs3 = new BuildingGS();
+        targetGs3.setStockpile(ResourceType.Gold, 8000);
+        targetGs3.addResourcePerTick(ResourceType.Gold, 20);
+        targetGs3.setStockpile(ResourceType.Stone, 8000);
+        targetGs3.addResourcePerTick(ResourceType.Stone, 20);
+        targetGs3.setStockpile(ResourceType.Wood, 8000);
+        targetGs3.addResourcePerTick(ResourceType.Wood, 20);
+        targetGs3.setStockpile(ResourceType.Silver, 800);
+        targetGs3.addResourcePerTick(ResourceType.Silver, 20);
+        targetGameStates.Add(targetGs3);
+
+        Debug.Log("target game states size: " + targetGameStates.Count);
+        for (int indexActor = 0; indexActor < noOfActors; indexActor++)
+        {
+            updateTargetDisplay(targetGameStates[currentTargetGsIndex[indexActor]], indexActor);
+        }
     }
 
     private void Update()
@@ -120,7 +164,6 @@ public class God
         {
             // If it's been a while since our last game tick
             // Propogate an "in game tick"
-
             tick();
             lastGameTick = Time.time;
         }
@@ -129,21 +172,11 @@ public class God
 
     private void tick()
     {
-        // Simulate one tick of this game
-        for (int indexActor = 0; indexActor < noOfActors; indexActor++)
+        aiCurrentGameState.timePasses(1);
+        if (isTargetReached(indexHuman))
         {
-            BuildingGS gameState = this.currentGameStates[indexActor];
-            gameState.timePasses(1);
-            if (isTargetReached(indexActor))
-            {
-                targetReached(indexActor);
-            }
-
+            targetReached(indexHuman);
         }
-        // TODO
-        //displayAllResourceCount();
-
-        //resourceDisplay.updateTick();
     }
 
     private void targetReached(int indexActor)
@@ -158,8 +191,9 @@ public class God
         {
             currentTargetGsIndex[indexActor]++;
             if (indexActor == indexAi) {
-                executeNextTargetGsAi();
+                planNextTargetGsAi();
             }
+            updateTargetDisplay(targetGameStates[currentTargetGsIndex[indexActor]], indexActor);
         }
         else
         {
@@ -169,17 +203,133 @@ public class God
 
     private void declareGameWon(int indexActor)
     {
-        // TODO
+        // TODO: Onscreen text?
+        Debug.Log("Game won by player" + (indexActor + 1));
     }
 
     private void celebrateTargetReached(int indexActor)
     {
-        // TODO
+        // TODO: Onscreen text?
+        Debug.Log("Taget reached for player" + (indexActor + 1));
     }
 
     private bool isTargetReached(int indexActor)
     {
-        // TODO
-        return false;
+        BuildingGS gsToCheck = GameController.gameState;
+        if (indexActor == indexAi) {
+            gsToCheck = aiCurrentGameState;
+        }
+        BuildingGS targetGs = targetGameStates[currentTargetGsIndex[indexActor]];
+        foreach (ResourceType rt in gsToCheck.getAllResourceTypes())
+        {
+            if ((gsToCheck.getStockpile(rt) < targetGs.getStockpile(rt))
+                || (gsToCheck.getChangePerTick(rt) < targetGs.getChangePerTick(rt))) {
+                return false;
+            }
+        }
+        return true;
     }
+
+    private void updateTargetDisplay(BuildingGS gameState, int indexActor)
+    {
+        Debug.Log("actor to update target display: " + indexActor);
+        ResourceDisplayController rdc = meTargetDisplay;
+        if (indexActor == indexAi)
+        {
+            rdc = aiTargetDisplay;
+        }
+        foreach (ResourceType rt in gameState.getAllResourceTypes())
+        {
+            rdc.updateCountAndRPT(rt, gameState.getStockpile(rt), gameState.getChangePerTick(rt));
+        }
+    }
+
+
+    private void doWork(Work nextAiWork)
+    {
+        Debug.Log("Updating ai resource display");
+        foreach (ResourceType rt in aiCurrentGameState.getAllResourceTypes())
+        {
+            Debug.Log("RT: " + rt + ", " + aiCurrentGameState.getStockpile(rt));
+            aiResourceDisplay.updateCountAndRPT(rt, aiCurrentGameState.getStockpile(rt), aiCurrentGameState.getChangePerTick(rt));
+        }
+        Debug.Log("Doing work: " + nextAiWork.workType);
+        switch (nextAiWork.workType)
+        {
+            case EWork.BuildBuilding:
+                startBuildBuilding(BuildingFactory.buildNew(nextAiWork.buildingType, -1, -1), nextAiWork.frameWait);
+                break;
+            case EWork.BuyAndAssignWorker:
+                if (aiCurrentGameState.canBuyWorker()) {
+                    aiCurrentGameState.buyAndAssignWorker(nextAiWork.buildingType);
+                    aiResourceDisplay.addTotalWorker();
+                };
+                break;
+            case EWork.Wait:
+                StartCoroutine(aiWait(nextAiWork.frameWait));
+                break;
+            default:
+                doNextWorkAi();
+                break;
+        }
+    }
+
+    private IEnumerator aiWait(int frameWait)
+    {
+        yield return new WaitForSeconds(frameWait * GameSetup.TICK_LENGHT_SEC);
+        doNextWorkAi();
+    }
+
+    public void startBuildBuilding(IBuilding newBuilding, int frameWait)
+    {
+        // Spend the cash money 
+        // NOTE: validation is done at button click time
+        aiCurrentGameState.spendForBuilding(newBuilding);
+
+        // Start the construction process of this new building
+        StartCoroutine(waitForConstruction(newBuilding, frameWait));
+    }
+
+    private IEnumerator waitForConstruction(IBuilding newBuilding, int frameWait)
+    {
+        // Wait for the designated time
+        yield return new WaitForSeconds(frameWait * GameSetup.TICK_LENGHT_SEC);
+        forceBuildBuilding(newBuilding);
+    }
+
+    public void forceBuildBuilding(IBuilding newBuilding)
+    {
+        // Give the building to the resource manager logic
+        // We've already spent for the building in the "startBuildBuilding" func
+        aiCurrentGameState.forceAddBuilding(newBuilding);
+
+        // Display the new resource stockpiles/ income per turn
+        displayBuildingResouceDelta(newBuilding);
+        doNextWorkAi();
+    }
+
+    private void displayBuildingResouceDelta(IBuilding newBuiding)
+    {
+        // Updates the resource display for only the resources this building cares about
+        // IE: input, output and cost to build resources
+
+        // Update the income per turn for the building
+        List<ResourceType> allResources = newBuiding.outputResources();
+        allResources.AddRange(newBuiding.inputResources());
+        foreach (ResourceType rt in allResources)
+        {
+            int newStockpile = aiCurrentGameState.getStockpile(rt);
+            int newRPT = aiCurrentGameState.getChangePerTick(rt);
+            aiResourceDisplay.updateCountAndRPT(rt, newStockpile, newRPT);
+        }
+
+        // Update the cost to build the building
+        foreach (ResourceChange rc in newBuiding.costToBuild())
+        {
+            if (allResources.Contains(rc.resourceType)) { continue; } // If we've already updated this resource type above ignore it
+            int newStockpile = aiCurrentGameState.getStockpile(rc.resourceType);
+            aiResourceDisplay.updateResourceCount(rc.resourceType, newStockpile);
+        }
+    }
+
 }

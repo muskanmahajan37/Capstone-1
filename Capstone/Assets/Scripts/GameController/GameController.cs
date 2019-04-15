@@ -12,7 +12,7 @@ public class GameController : MonoBehaviour
     public static GameController singleton;
 
     // Controllers
-    private BuildingGS gameState;
+    public static BuildingGS gameState;
     private MapController mapController;
 
     // Resources
@@ -29,6 +29,7 @@ public class GameController : MonoBehaviour
     private Queue<Dwarf> freeWorkers = new Queue<Dwarf>();
 
     private void Awake() {
+        Debug.Log("GC awoken!");
         buildSingleton();
     }
 
@@ -44,14 +45,15 @@ public class GameController : MonoBehaviour
     }
 
     private void Start() {
+        Debug.Log("GC start!");
         this.mapController = MapController.singleton;
 
         this.buildingPositions = new Dictionary<Tile, IBuilding>();
 
-        ResourceChange gold = new ResourceChange(ResourceType.Gold, 1000);
-        ResourceChange stone = new ResourceChange(ResourceType.Stone, 1000);
-        ResourceChange wood = new ResourceChange(ResourceType.Wood, 1000);
-        this.gameState = new BuildingGS(new List<ResourceChange>(3) { gold, stone, wood});
+        //ResourceChange gold = new ResourceChange(ResourceType.Gold, 1000);
+        //ResourceChange stone = new ResourceChange(ResourceType.Stone, 1000);
+        //ResourceChange wood = new ResourceChange(ResourceType.Wood, 1000);
+        //this.gameState = new BuildingGS(new List<ResourceChange>(3) { gold, stone, wood});
         this.displayAllResourceCount();
 
         // Set up worker units to be drawn
@@ -73,14 +75,14 @@ public class GameController : MonoBehaviour
 
     private void tick() {
         // Simulate one tick of this game
-        this.gameState.timePasses(1);
+        gameState.timePasses(1);
         displayAllResourceCount();
 
         resourceDisplay.updateTick();
     }
 
     private void displayAllResourceCount() {
-        foreach (ResourceType rt in this.gameState.getAllResourceTypes()) {
+        foreach (ResourceType rt in gameState.getAllResourceTypes()) {
             this.resourceDisplay.updateResourceCount(rt, gameState.getStockpile(rt));
         }
     }
@@ -95,18 +97,18 @@ public class GameController : MonoBehaviour
     public IBuilding getAnyOpenBuilding(BuildingType bt) {
         // Returns an instance of the provided BT with a free worker slot
         // If no such building exists, null is returned
-        return this.gameState.getAnyOpenBuilding(bt);
+        return gameState.getAnyOpenBuilding(bt);
     }
 
     public bool canBuildBuilding(BuildingType bt, int x, int y) {
-        return this.gameState.canAffordBuilding(bt) &&
+        return gameState.canAffordBuilding(bt) &&
                this.mapController.isWalkable(x, y);
     }
 
     public void startBuildBuilding(IBuilding newBuilding) {
         // Spend the cash money 
         // NOTE: validation is done at button click time
-        this.gameState.spendForBuilding(newBuilding);
+        gameState.spendForBuilding(newBuilding);
 
         // Start the construction process of this new building
         StartCoroutine(waitForConstruction(newBuilding));
@@ -126,7 +128,7 @@ public class GameController : MonoBehaviour
 
         // Give the building to the resource manager logic
         // We've already spent for the building in the "startBuildBuilding" func
-        this.gameState.forceAddBuilding(newBuilding);
+        gameState.forceAddBuilding(newBuilding);
 
         // Display the new resource stockpiles/ income per turn
         displayBuildingResouceDelta(newBuilding);
@@ -143,15 +145,15 @@ public class GameController : MonoBehaviour
         List<ResourceType> allResources = newBuiding.outputResources();
         allResources.AddRange(newBuiding.inputResources());
         foreach(ResourceType rt in allResources) {
-            int newStockpile = this.gameState.getStockpile(rt);
-            int newRPT = this.gameState.getChangePerTick(rt);
+            int newStockpile = gameState.getStockpile(rt);
+            int newRPT = gameState.getChangePerTick(rt);
             resourceDisplay.updateCountAndRPT(rt, newStockpile, newRPT);
         }
 
         // Update the cost to build the building
         foreach(ResourceChange rc in newBuiding.costToBuild()) {
             if (allResources.Contains(rc.resourceType)) { continue; } // If we've already updated this resource type above ignore it
-            int newStockpile = this.gameState.getStockpile(rc.resourceType);
+            int newStockpile = gameState.getStockpile(rc.resourceType);
             resourceDisplay.updateResourceCount(rc.resourceType, newStockpile);
          }
     }
@@ -188,7 +190,7 @@ public class GameController : MonoBehaviour
         // It is assumed the worker has already been removed from the free worker queue
         
         // The gameState will update the worker counts for us
-        this.gameState.assignWorker(building);
+        gameState.assignWorker(building);
 
         // Update the display
         // TODO: Break this function up into dispalyInputs, displayOutputs and displayCosts
@@ -203,7 +205,7 @@ public class GameController : MonoBehaviour
 
     public void unassignWorker(IBuilding building) {
         // the GameState will update the worker counts for us
-        this.gameState.unassignWorker(building);
+        gameState.unassignWorker(building);
         
         displayBuildingResouceDelta(building);
 
@@ -212,12 +214,12 @@ public class GameController : MonoBehaviour
     }
 
     public bool canBuyWorker() {
-        return this.gameState.canBuyWorker();
+        return gameState.canBuyWorker();
     }
 
     public void forceBuyWorker() {
         // Spend the cash money 
-        this.gameState.forceBuyWorker();
+        gameState.forceBuyWorker();
         // Place the worker at 0,0
         this.spawnWorker();
         // Update the UI
