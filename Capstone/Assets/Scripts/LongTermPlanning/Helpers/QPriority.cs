@@ -113,8 +113,8 @@ public class QPriority : IComparable {
         if (reccomendedPreRecDelta != other.reccomendedPreRecDelta)
             { return reccomendedPreRecDelta - other.reccomendedPreRecDelta; }
 
-        //if (this.bestCPTDelta != other.bestCPTDelta)
-        //    { return this.bestCPTDelta - other.bestCPTDelta; }
+        if (this.bestCPTDelta != other.bestCPTDelta)
+            { return this.bestCPTDelta - other.bestCPTDelta; }
 
         int myTotalBuildingCount = this.currentNode.gameState.totalBuildingCount();
         int otherTotalBuildingCount = other.currentNode.gameState.totalBuildingCount();

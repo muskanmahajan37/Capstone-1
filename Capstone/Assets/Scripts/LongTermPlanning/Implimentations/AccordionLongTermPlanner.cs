@@ -11,7 +11,7 @@ public class AccordionLongTermPlanner : ALongTermPlanner {
     public void accordionLTP(BuildingGS initialGS,
                              BuildingGS targetGS,
                              Func<Stack<Work>, bool> callback,
-                             int memoryBound = 300) {
+                             int memoryBound = 20000) {
         PriorityQueue<QPriority, QGameState> accordionQ = new AccordionPriorityQueue(memoryBound);
         StartCoroutine(LTPEngine.BuildPlan(initialGS, targetGS, accordionQ, base.processResult));
         StartCoroutine(base.waitForFinish(callback));

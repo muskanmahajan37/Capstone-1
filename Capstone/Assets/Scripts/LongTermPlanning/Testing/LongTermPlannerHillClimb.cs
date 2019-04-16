@@ -12,28 +12,28 @@ public class LongTermPlannerHillClimb : MonoBehaviour {
     public void hillClimb() {
 
         BuildingGS initialGS = new BuildingGS();
-        initialGS.setStockpile(ResourceType.Gold, 1000);
+        initialGS.setStockpile(ResourceType.Gold, 500);
         initialGS.addResourcePerTick(ResourceType.Gold, 0);
-        initialGS.setStockpile(ResourceType.Stone, 1000);
+        initialGS.setStockpile(ResourceType.Stone, 500);
         initialGS.addResourcePerTick(ResourceType.Stone, 0);
-        initialGS.setStockpile(ResourceType.Wood, 1000);
+        initialGS.setStockpile(ResourceType.Wood, 500);
         initialGS.addResourcePerTick(ResourceType.Wood, 0);
 
 
         BuildingGS targetGS = new BuildingGS();
-        targetGS.setStockpile(ResourceType.Gold, 1000);
+        //targetGS.setStockpile(ResourceType.Gold, 200);
         targetGS.addResourcePerTick(ResourceType.Gold, 5);
-        targetGS.setStockpile(ResourceType.Stone, 1000);
+        //targetGS.setStockpile(ResourceType.Stone, 200);
         targetGS.addResourcePerTick(ResourceType.Stone, 5);
-        targetGS.setStockpile(ResourceType.Wood, 1000);
+       // targetGS.setStockpile(ResourceType.Wood, 200);
         targetGS.addResourcePerTick(ResourceType.Wood, 5);
-        //targetGS.setStockpile(ResourceType.Silver, 500);
+        //targetGS.setStockpile(ResourceType.Silver, 200);
         targetGS.addResourcePerTick(ResourceType.Silver, 5);
-        //targetGS.setStockpile(ResourceType.Coal, 100);
+        //targetGS.setStockpile(ResourceType.Coal, 200);
         targetGS.addResourcePerTick(ResourceType.Coal, 5);
-        //targetGS.setStockpile(ResourceType.Iron, 100);
+        //targetGS.setStockpile(ResourceType.Iron, 200);
         targetGS.addResourcePerTick(ResourceType.Iron, 5);
-        //targetGS.setStockpile(ResourceType.Steel, 10);
+        //targetGS.setStockpile(ResourceType.Steel, 200);
         targetGS.addResourcePerTick(ResourceType.Steel, 5);
 
         UnityEngine.Debug.Log(Stopwatch.Frequency);

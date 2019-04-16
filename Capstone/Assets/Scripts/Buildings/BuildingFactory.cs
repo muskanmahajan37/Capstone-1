@@ -239,6 +239,8 @@ public static class BuildingFactory {
 
 
 public class BuildingBlueprint {
+    public static bool inputResources = true;
+
     public readonly string buildingName;
     
     public readonly int maxPop;
@@ -246,7 +248,13 @@ public class BuildingBlueprint {
     public readonly int timeToBuild;
 
     public readonly List<IResourceProducer> outputResourceProduction;
-    public readonly List<IResourceProducer> inputResourceCosts; // Note: despite intuition, this should always be a positive vale
+    public readonly List<IResourceProducer> _inputResourceCosts;
+    public List<IResourceProducer> inputResourceCosts { // Note: despite intuition, this should always be a positive vale
+        get {
+            if (inputResources) { return _inputResourceCosts; }
+            else                { return new List<IResourceProducer>(0); }
+        }
+    } 
 
     public BuildingBlueprint(
         string buildingname = "Un-named building",
@@ -270,7 +278,7 @@ public class BuildingBlueprint {
         }
         
         this.outputResourceProduction = (outputResourceProduction == null) ? new List<IResourceProducer>() : outputResourceProduction;
-        this.inputResourceCosts = (inputResourceProduction == null)   ? new List<IResourceProducer>() : inputResourceProduction;
+        this._inputResourceCosts = (inputResourceProduction == null)   ? new List<IResourceProducer>() : inputResourceProduction;
     }
 
 }
