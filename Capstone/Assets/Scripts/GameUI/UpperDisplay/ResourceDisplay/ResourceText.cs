@@ -58,12 +58,12 @@ public static class Stringify {
 
     public static string shortString(int x) {
         int absX = Mathf.Abs(x);
-        if(absX < 1000) {
+        if(absX < 10000) {
             // [0, 999]
             return x.ToString();
         } else if (absX < 1000000) {
             // [1k, 999k]
-            return (x / 1000).ToString() + "K";
+            return (x / 1000).ToString() + "." + ((x % 1000) / 100) + "K";
         } else {
             // [1M, infinity] 1000 000 000
             return (x / 1000000).ToString() + "M";
